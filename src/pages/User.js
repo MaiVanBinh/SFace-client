@@ -1,5 +1,5 @@
 import { filter } from 'lodash';
-import { Icon } from '@iconify/react';
+
 import { sentenceCase } from 'change-case';
 import { useEffect, useState } from 'react';
 import plusFill from '@iconify/icons-eva/plus-fill';
@@ -15,6 +15,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { PhotoCamera, Videocam } from '@mui/icons-material';
 
 // material
+import { Icon } from '@iconify/react';
 import {
   Card,
   Table,
