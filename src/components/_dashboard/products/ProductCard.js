@@ -1,15 +1,19 @@
 import PropTypes from 'prop-types';
 import { Link as RouterLink } from 'react-router-dom';
 // material
-import { Box, Card, Link, Typography, Stack } from '@mui/material';
+import { Box, Card, Link, Typography, Stack, Grid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 // utils
 import { fCurrency } from '../../../utils/formatNumber';
 //
 import Label from '../../Label';
 import ColorPreview from '../../ColorPreview';
+import trash2Fill from '@iconify/icons-eva/trash-2-fill';
 
 // ----------------------------------------------------------------------
+
+import { Icon } from '@iconify/react';
+import { IconButton } from '@mui/material';
 
 const ProductImgStyle = styled('img')({
   top: 0,
@@ -25,13 +29,20 @@ ShopProductCard.propTypes = {
   product: PropTypes.object
 };
 
-export default function ShopProductCard({ product }) {
-  const { name, cover, price, colors, status, priceSale } = product;
+const RootStyle = styled()(({ theme }) => ({
+  height: 96,
+  display: 'flex',
+  justifyContent: 'space-between',
+  padding: theme.spacing(0, 1, 0, 3)
+}));
+
+export default function ShopProductCard({ face }) {
+  const { filename, id, person } = face;
 
   return (
     <Card>
       <Box sx={{ pt: '100%', position: 'relative' }}>
-        {status && (
+        {/* {status && (
           <Label
             variant="filled"
             color={(status === 'sale' && 'error') || 'info'}
@@ -45,18 +56,25 @@ export default function ShopProductCard({ product }) {
           >
             {status}
           </Label>
-        )}
-        <ProductImgStyle alt={name} src={cover} />
+        )} */}
+        <ProductImgStyle alt={id} src={filename} />
       </Box>
-
-      <Stack spacing={2} sx={{ p: 3 }}>
-        <Link to="#" color="inherit" underline="hover" component={RouterLink}>
+      <Grid container spacing={2}>
+        <Grid item xs={6}>
           <Typography variant="subtitle2" noWrap>
-            {name}
+            {person ? person.name : 'unknow'}
           </Typography>
-        </Link>
-
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        </Grid>
+        <Grid item xs={6}>
+          <IconButton size="large">
+            <Icon icon={trash2Fill} />
+          </IconButton>
+        </Grid>
+      </Grid>
+      {/* <Stack spacing={2} direction="row" sx={{ p: 3 }}>
+      
+      {/* //trash2Fill */}
+      {/* <Stack direction="row" alignItems="center" justifyContent="space-between">
           <ColorPreview colors={colors} />
           <Typography variant="subtitle1">
             <Typography
@@ -72,8 +90,8 @@ export default function ShopProductCard({ product }) {
             &nbsp;
             {fCurrency(price)}
           </Typography>
-        </Stack>
-      </Stack>
+        </Stack> */}
+      {/* </Stack> */}
     </Card>
   );
 }

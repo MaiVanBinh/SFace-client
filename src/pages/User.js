@@ -41,7 +41,8 @@ import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dash
 import USERLIST from '../_mocks_/user';
 import * as actions from '../reduxConfig/store/index';
 import { set } from 'date-fns';
-
+import ApiFetching from 'src/utils/apiFetching';
+import { get } from 'lodash-es';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
@@ -86,26 +87,33 @@ function applySortFilter(array, comparator, query) {
 
 const User = (props) => {
   const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [order, setOrder] = useState('asc');
   const [selected, setSelected] = useState([]);
   const [orderBy, setOrderBy] = useState('name');
   const [filterName, setFilterName] = useState('');
-  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [openCreate, setOpenCreate] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [openRegisterFace, setOpenRegisterFace] = useState(false);
   const [name, setName] = useState('');
   const [currPerson, setCurrPerson] = useState(null);
   const [imageRegister, setImageRegister] = useState(null);
-  const { onFetchPersons, persons, onCreatePerson, onDeletePerson, onRegisterFace } = props;
+  const [persons, setPersons] = useState([]);
+  const [totalPersons, setTotalPersons] = useState(0);
+  const { onFetchPersons, onCreatePerson, onDeletePerson, onRegisterFace } = props;
+  const { getPersons, createPersons, deletePersons, registerFace } = ApiFetching();
 
   const deletePersonHandle = () => {
     console.log(currPerson);
     if (currPerson) {
-      onDeletePerson('toke', { name: currPerson.name });
+      deletePersons(currPerson.uuid, () => {
+        setOpenDelete(false);
+        getPersons((data) => {
+          setPersons(data.list);
+          setTotalPersons(data.paging.total);
+        });
+      });
     }
-    setOpenDelete(false);
-    onFetchPersons('token');
   };
 
   const openDeteleForm = (row) => {
@@ -115,14 +123,22 @@ const User = (props) => {
   };
 
   const createPersonHandle = () => {
-    onCreatePerson('token', { name: name });
-    setCurrPerson(null);
-    setOpenCreate(false);
-    onFetchPersons('token');
+    createPersons({ name: name }, () => {
+      getPersons((data) => {
+        setPersons(data.list);
+        setCurrPerson(null);
+        setOpenCreate(false);
+        setName('');
+      });
+    });
   };
 
   useEffect(() => {
-    onFetchPersons('token');
+    // onFetchPersons('token');
+    getPersons((data) => {
+      setPersons(data.list);
+      setTotalPersons(data.paging.total);
+    });
   }, []);
 
   const handleRequestSort = (event, property) => {
@@ -174,13 +190,15 @@ const User = (props) => {
   const registerFaceHandle = (face) => {
     if (imageRegister && currPerson) {
       let registerData = new FormData();
-      registerData.append('name', currPerson.name);
       registerData.append('image', imageRegister.currentFile);
-      onRegisterFace('token', registerData);
-      console.log(registerData.get('name'));
+      registerFace(registerData, currPerson.uuid, () => {
+        console.log('register face success');
+      });
     }
+
     setOpenRegisterFace(false);
     setCurrPerson(null);
+    setImageRegister(null);
   };
 
   const openRegisterFaceHandle = (row) => {
@@ -225,6 +243,7 @@ const User = (props) => {
             filterName={filterName}
             onFilterName={handleFilterByName}
           />
+          
 
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
@@ -239,47 +258,45 @@ const User = (props) => {
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {persons && persons.data
-                    ? persons.data
-                        // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                        .map((row) => {
-                          const { uuid, name } = row;
-                          const isItemSelected = selected.indexOf(name) !== -1;
-                          const avatarUrl =
-                            'https://minimal-kit-react.vercel.app/static/mock-images/avatars/avatar_12.jpg';
-                          return (
-                            <TableRow
-                              hover
-                              key={uuid}
-                              tabIndex={-1}
-                              role="checkbox"
-                              selected={isItemSelected}
-                              aria-checked={isItemSelected}
-                            >
-                              <TableCell padding="checkbox">
-                                <Checkbox
-                                  checked={isItemSelected}
-                                  onChange={(event) => handleClick(event, name)}
-                                />
-                              </TableCell>
-                              <TableCell component="th" scope="row" padding="none">
-                                <Stack direction="row" alignItems="center" spacing={2}>
-                                  <Avatar alt={name} src={avatarUrl} />
-                                  <Typography variant="subtitle2" noWrap>
-                                    {name}
-                                  </Typography>
-                                </Stack>
-                              </TableCell>
+                  {persons
+                    ? persons.map((row) => {
+                        const { uuid, name } = row;
+                        const isItemSelected = selected.indexOf(name) !== -1;
+                        const avatarUrl =
+                          'https://minimal-kit-react.vercel.app/static/mock-images/avatars/avatar_12.jpg';
+                        return (
+                          <TableRow
+                            hover
+                            key={uuid}
+                            tabIndex={-1}
+                            role="checkbox"
+                            selected={isItemSelected}
+                            aria-checked={isItemSelected}
+                          >
+                            {/* <TableCell padding="checkbox">
+                              <Checkbox
+                                checked={isItemSelected}
+                                onChange={(event) => handleClick(event, name)}
+                              />
+                            </TableCell> */}
+                            <TableCell component="th" scope="row" padding="normal">
+                              <Stack direction="row" alignItems="center" spacing={2}>
+                                <Avatar alt={name} src={avatarUrl} />
+                                <Typography variant="subtitle2" noWrap>
+                                  {name}
+                                </Typography>
+                              </Stack>
+                            </TableCell>
 
-                              <TableCell align="right">
-                                <UserMoreMenu
-                                  openDetele={() => openDeteleForm(row)}
-                                  openRegisterFace={() => openRegisterFaceHandle(row)}
-                                />
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
+                            <TableCell align="right">
+                              <UserMoreMenu
+                                openDetele={() => openDeteleForm(row)}
+                                openRegisterFace={() => openRegisterFaceHandle(row)}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
                     : null}
                   {emptyRows > 0 && (
                     <TableRow style={{ height: 53 * emptyRows }}>
@@ -303,7 +320,7 @@ const User = (props) => {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={USERLIST.length}
+            count={totalPersons}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -311,7 +328,13 @@ const User = (props) => {
           />
         </Card>
 
-        <Dialog open={openCreate} onClose={() => setOpenCreate(false)}>
+        <Dialog
+          open={openCreate}
+          onClose={() => {
+            setOpenCreate(false);
+            setName('');
+          }}
+        >
           <DialogTitle>Create Person</DialogTitle>
           <DialogContent>
             <TextField
@@ -339,7 +362,7 @@ const User = (props) => {
           </DialogActions>
         </Dialog>
 
-        <Dialog open={openDelete} onClose={() => setOpenCreate(false)}>
+        <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
           <DialogTitle>Delete Person: {currPerson && currPerson.name}</DialogTitle>
 
           <DialogActions>

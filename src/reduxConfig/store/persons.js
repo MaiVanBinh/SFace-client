@@ -11,10 +11,10 @@ export const fetchPersons = (token) => {
       }
     };
     axios
-      .get('/person', config)
+      .get('/auth/persons', config)
       .then((res) => {
         dispatch({
-          payload: res.data,
+          payload: res.data.data,
           type: actionsType.GET_PERSONS
         });
       })
@@ -33,7 +33,7 @@ export const createPerson = (token, data) => {
       }
     };
     axios
-      .post('/person', data, config)
+      .post('/auth/persons', data, config)
       .then((res) => {
         // dispatch({
         //   payload: res.data,
@@ -57,7 +57,7 @@ export const deletePerson = (token, data) => {
       }
     };
     axios
-      .delete('/person', config)
+      .delete('/auth/persons', config)
       .then((res) => {
         console.log(res.data);
         // dispatch({
@@ -80,7 +80,7 @@ export const registerFace = (token, payload) => {
       }
     };
     axios
-      .post('/person/register-face', payload, config)
+      .post('/auth/person/register-face', payload, config)
       .then((res) => {
         console.log(res.data);
       })

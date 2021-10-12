@@ -1,5 +1,5 @@
 import { useFormik } from 'formik';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 // material
 import { Container, Stack, Typography } from '@mui/material';
 // components
@@ -11,13 +11,20 @@ import {
   ProductFilterSidebar
 } from '../components/_dashboard/products';
 //
-import PRODUCTS from '../_mocks_/products';
-
+import ApiFetching from 'src/utils/apiFetching';
 // ----------------------------------------------------------------------
+import axios from '../axiosInstance';
 
 export default function EcommerceShop() {
   const [openFilter, setOpenFilter] = useState(false);
+  const [faces, setFaces] = useState([]);
+  const {getFaces} = ApiFetching();
 
+  useEffect(() => {
+    getFaces((data) => {
+      setFaces(data.list)
+    })
+  }, []);
   const formik = useFormik({
     initialValues: {
       gender: '',
@@ -50,7 +57,7 @@ export default function EcommerceShop() {
     <Page title="Dashboard: Products | Minimal-UI">
       <Container>
         <Typography variant="h4" sx={{ mb: 5 }}>
-          Products
+          Faces
         </Typography>
 
         <Stack
@@ -72,7 +79,7 @@ export default function EcommerceShop() {
           </Stack>
         </Stack>
 
-        <ProductList products={PRODUCTS} />
+        <ProductList faces={faces} />
         <ProductCartWidget />
       </Container>
     </Page>
