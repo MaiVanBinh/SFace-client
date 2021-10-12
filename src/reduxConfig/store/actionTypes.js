@@ -1,0 +1,2 @@
+export const GET_PERSONS = 'GET_PERSONS';
+export const CREATE_PERSON = 'CREATE_PERSON';

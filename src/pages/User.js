@@ -1,9 +1,19 @@
 import { filter } from 'lodash';
 import { Icon } from '@iconify/react';
 import { sentenceCase } from 'change-case';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import plusFill from '@iconify/icons-eva/plus-fill';
 import { Link as RouterLink } from 'react-router-dom';
+import { connect } from 'react-redux';
+
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import { PhotoCamera, Videocam } from '@mui/icons-material';
+
 // material
 import {
   Card,
@@ -18,7 +28,8 @@ import {
   Container,
   Typography,
   TableContainer,
-  TablePagination
+  TablePagination,
+  IconButton
 } from '@mui/material';
 // components
 import Page from '../components/Page';
@@ -28,15 +39,17 @@ import SearchNotFound from '../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dashboard/user';
 //
 import USERLIST from '../_mocks_/user';
+import * as actions from '../reduxConfig/store/index';
+import { set } from 'date-fns';
 
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
   { id: 'name', label: 'Name', alignRight: false },
-  { id: 'company', label: 'Company', alignRight: false },
-  { id: 'role', label: 'Role', alignRight: false },
-  { id: 'isVerified', label: 'Verified', alignRight: false },
-  { id: 'status', label: 'Status', alignRight: false },
+  // { id: 'company', label: 'Company', alignRight: false },
+  // { id: 'role', label: 'Role', alignRight: false },
+  // { id: 'isVerified', label: 'Verified', alignRight: false },
+  // { id: 'status', label: 'Status', alignRight: false },
   { id: '' }
 ];
 
@@ -71,13 +84,46 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function User() {
+const User = (props) => {
   const [page, setPage] = useState(0);
   const [order, setOrder] = useState('asc');
   const [selected, setSelected] = useState([]);
   const [orderBy, setOrderBy] = useState('name');
   const [filterName, setFilterName] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [openCreate, setOpenCreate] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openRegisterFace, setOpenRegisterFace] = useState(false);
+  const [name, setName] = useState('');
+  const [currPerson, setCurrPerson] = useState(null);
+  const [imageRegister, setImageRegister] = useState(null);
+  const { onFetchPersons, persons, onCreatePerson, onDeletePerson, onRegisterFace } = props;
+
+  const deletePersonHandle = () => {
+    console.log(currPerson);
+    if (currPerson) {
+      onDeletePerson('toke', { name: currPerson.name });
+    }
+    setOpenDelete(false);
+    onFetchPersons('token');
+  };
+
+  const openDeteleForm = (row) => {
+    console.log(row);
+    setCurrPerson(row);
+    setOpenDelete(true);
+  };
+
+  const createPersonHandle = () => {
+    onCreatePerson('token', { name: name });
+    setCurrPerson(null);
+    setOpenCreate(false);
+    onFetchPersons('token');
+  };
+
+  useEffect(() => {
+    onFetchPersons('token');
+  }, []);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -125,6 +171,30 @@ export default function User() {
     setFilterName(event.target.value);
   };
 
+  const registerFaceHandle = (face) => {
+    if (imageRegister && currPerson) {
+      let registerData = new FormData();
+      registerData.append('name', currPerson.name);
+      registerData.append('image', imageRegister.currentFile);
+      onRegisterFace('token', registerData);
+      console.log(registerData.get('name'));
+    }
+    setOpenRegisterFace(false);
+    setCurrPerson(null);
+  };
+
+  const openRegisterFaceHandle = (row) => {
+    setCurrPerson(row);
+    setOpenRegisterFace(true);
+  };
+  const selectFile = (event) => {
+    setImageRegister({
+      currentFile: event.target.files[0],
+      previewImage: URL.createObjectURL(event.target.files[0]),
+      progress: 0,
+      message: ''
+    });
+  };
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
 
   const filteredUsers = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
@@ -142,6 +212,7 @@ export default function User() {
             variant="contained"
             component={RouterLink}
             to="#"
+            onClick={() => setOpenCreate(true)}
             startIcon={<Icon icon={plusFill} />}
           >
             New User
@@ -168,53 +239,48 @@ export default function User() {
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {filteredUsers
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row) => {
-                      const { id, name, role, status, company, avatarUrl, isVerified } = row;
-                      const isItemSelected = selected.indexOf(name) !== -1;
-
-                      return (
-                        <TableRow
-                          hover
-                          key={id}
-                          tabIndex={-1}
-                          role="checkbox"
-                          selected={isItemSelected}
-                          aria-checked={isItemSelected}
-                        >
-                          <TableCell padding="checkbox">
-                            <Checkbox
-                              checked={isItemSelected}
-                              onChange={(event) => handleClick(event, name)}
-                            />
-                          </TableCell>
-                          <TableCell component="th" scope="row" padding="none">
-                            <Stack direction="row" alignItems="center" spacing={2}>
-                              <Avatar alt={name} src={avatarUrl} />
-                              <Typography variant="subtitle2" noWrap>
-                                {name}
-                              </Typography>
-                            </Stack>
-                          </TableCell>
-                          <TableCell align="left">{company}</TableCell>
-                          <TableCell align="left">{role}</TableCell>
-                          <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell>
-                          <TableCell align="left">
-                            <Label
-                              variant="ghost"
-                              color={(status === 'banned' && 'error') || 'success'}
+                  {persons && persons.data
+                    ? persons.data
+                        // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                        .map((row) => {
+                          const { uuid, name } = row;
+                          const isItemSelected = selected.indexOf(name) !== -1;
+                          const avatarUrl =
+                            'https://minimal-kit-react.vercel.app/static/mock-images/avatars/avatar_12.jpg';
+                          return (
+                            <TableRow
+                              hover
+                              key={uuid}
+                              tabIndex={-1}
+                              role="checkbox"
+                              selected={isItemSelected}
+                              aria-checked={isItemSelected}
                             >
-                              {sentenceCase(status)}
-                            </Label>
-                          </TableCell>
+                              <TableCell padding="checkbox">
+                                <Checkbox
+                                  checked={isItemSelected}
+                                  onChange={(event) => handleClick(event, name)}
+                                />
+                              </TableCell>
+                              <TableCell component="th" scope="row" padding="none">
+                                <Stack direction="row" alignItems="center" spacing={2}>
+                                  <Avatar alt={name} src={avatarUrl} />
+                                  <Typography variant="subtitle2" noWrap>
+                                    {name}
+                                  </Typography>
+                                </Stack>
+                              </TableCell>
 
-                          <TableCell align="right">
-                            <UserMoreMenu />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                              <TableCell align="right">
+                                <UserMoreMenu
+                                  openDetele={() => openDeteleForm(row)}
+                                  openRegisterFace={() => openRegisterFaceHandle(row)}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                    : null}
                   {emptyRows > 0 && (
                     <TableRow style={{ height: 53 * emptyRows }}>
                       <TableCell colSpan={6} />
@@ -244,7 +310,99 @@ export default function User() {
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Card>
+
+        <Dialog open={openCreate} onClose={() => setOpenCreate(false)}>
+          <DialogTitle>Create Person</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label="Name"
+              type="text"
+              fullWidth
+              variant="standard"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => createPersonHandle()}>Save</Button>
+            <Button
+              onClick={() => {
+                setOpenCreate(false);
+                setName('');
+              }}
+            >
+              Cancle
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={openDelete} onClose={() => setOpenCreate(false)}>
+          <DialogTitle>Delete Person: {currPerson && currPerson.name}</DialogTitle>
+
+          <DialogActions>
+            <Button onClick={() => deletePersonHandle()}>Save</Button>
+            <Button
+              onClick={() => {
+                setOpenDelete(false);
+                setCurrPerson(null);
+              }}
+            >
+              Cancle
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={openRegisterFace}
+          onClose={() => {
+            setOpenRegisterFace(false);
+            setCurrPerson(null);
+            setImageRegister(null);
+          }}
+        >
+          <DialogTitle>Add a Image: {currPerson && currPerson.name}</DialogTitle>
+          <DialogContent>
+            <input accept="image/*" id="icon-button-photo" type="file" onChange={selectFile} />
+            <label htmlFor="icon-button-photo">
+              <IconButton color="primary" component="span">
+                <PhotoCamera />
+              </IconButton>
+            </label>
+            {imageRegister && <img src={imageRegister.previewImage} alt="" />}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => registerFaceHandle()}>Save</Button>
+            <Button
+              onClick={() => {
+                setOpenRegisterFace(false);
+                setCurrPerson(null);
+                setImageRegister(null);
+              }}
+            >
+              Cancle
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Page>
   );
+};
+
+function mapStateToProps(state) {
+  return {
+    persons: state.persons
+  };
 }
+
+function mapDispatchToProps(dispatch) {
+  return {
+    onFetchPersons: (token) => dispatch(actions.fetchPersons(token)),
+    onCreatePerson: (token, payload) => dispatch(actions.createPerson(token, payload)),
+    onDeletePerson: (token, payload) => dispatch(actions.deletePerson(token, payload)),
+    onRegisterFace: (token, payload) => dispatch(actions.registerFace(token, payload))
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(User);
