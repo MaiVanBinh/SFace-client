@@ -29,12 +29,7 @@ ShopProductCard.propTypes = {
   product: PropTypes.object
 };
 
-const RootStyle = styled()(({ theme }) => ({
-  height: 96,
-  display: 'flex',
-  justifyContent: 'space-between',
-  padding: theme.spacing(0, 1, 0, 3)
-}));
+
 
 export default function ShopProductCard({ face }) {
   const { filename, id, person } = face;

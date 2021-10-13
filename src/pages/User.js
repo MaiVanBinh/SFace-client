@@ -1,10 +1,12 @@
 import { filter } from 'lodash';
+import { makeStyles } from '@mui/styles';
 
 import { sentenceCase } from 'change-case';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, cloneElement, forwardRef } from 'react';
 import plusFill from '@iconify/icons-eva/plus-fill';
 import { Link as RouterLink } from 'react-router-dom';
 import { connect } from 'react-redux';
+import FaceIcon from '@mui/icons-material/Face';
 
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -13,9 +15,23 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { PhotoCamera, Videocam } from '@mui/icons-material';
+import cameraFill from '@iconify/icons-eva/camera-fill';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Slide from '@mui/material/Slide';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import CloseIcon from '@mui/icons-material/Close';
+import Divider from '@mui/material/Divider';
+import Products from './Products';
 
 // material
 import { Icon } from '@iconify/react';
+import CircularProgress from '@mui/material/CircularProgress';
+
 import {
   Card,
   Table,
@@ -30,7 +46,9 @@ import {
   Typography,
   TableContainer,
   TablePagination,
-  IconButton
+  IconButton,
+  Box,
+  Grid
 } from '@mui/material';
 // components
 import Page from '../components/Page';
@@ -55,7 +73,25 @@ const TABLE_HEAD = [
   { id: '' }
 ];
 
+const useStyles = makeStyles({
+  dialogCustomizedWidth: {
+    width: '80%'
+  }
+});
+
 // ----------------------------------------------------------------------
+
+const Transition = forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
+function generate(data, element) {
+  return [0, 1, 2].map((value) =>
+    cloneElement(element, {
+      key: value
+    })
+  );
+}
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -87,6 +123,8 @@ function applySortFilter(array, comparator, query) {
 }
 
 const User = (props) => {
+  const classes = useStyles();
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [order, setOrder] = useState('asc');
@@ -96,13 +134,17 @@ const User = (props) => {
   const [openCreate, setOpenCreate] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [openRegisterFace, setOpenRegisterFace] = useState(false);
+  const [openListFaces, setOpenListFaces] = useState(false);
   const [name, setName] = useState('');
   const [currPerson, setCurrPerson] = useState(null);
-  const [imageRegister, setImageRegister] = useState(null);
+  const [currImage, setCurrImage] = useState(null);
   const [persons, setPersons] = useState([]);
   const [totalPersons, setTotalPersons] = useState(0);
-  const { onFetchPersons, onCreatePerson, onDeletePerson, onRegisterFace } = props;
-  const { getPersons, createPersons, deletePersons, registerFace } = ApiFetching();
+  const [openRecFace, setOpenRecFace] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [facesRec, setFacesRec] = useState([]);
+
+  const { getPersons, createPersons, deletePersons, registerFace, recFaces } = ApiFetching();
 
   const deletePersonHandle = () => {
     console.log(currPerson);
@@ -175,6 +217,7 @@ const User = (props) => {
     setSelected(newSelected);
   };
 
+  useEffect(() => {});
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -189,9 +232,9 @@ const User = (props) => {
   };
 
   const registerFaceHandle = (face) => {
-    if (imageRegister && currPerson) {
+    if (currImage && currPerson) {
       let registerData = new FormData();
-      registerData.append('image', imageRegister.currentFile);
+      registerData.append('image', currImage.currentFile);
       registerFace(registerData, currPerson.uuid, () => {
         console.log('register face success');
       });
@@ -199,7 +242,7 @@ const User = (props) => {
 
     setOpenRegisterFace(false);
     setCurrPerson(null);
-    setImageRegister(null);
+    setCurrImage(null);
   };
 
   const openRegisterFaceHandle = (row) => {
@@ -207,12 +250,25 @@ const User = (props) => {
     setOpenRegisterFace(true);
   };
   const selectFile = (event) => {
-    setImageRegister({
+    setCurrImage({
       currentFile: event.target.files[0],
       previewImage: URL.createObjectURL(event.target.files[0]),
       progress: 0,
       message: ''
     });
+  };
+
+  const recognitionHandle = () => {
+    if (currImage) {
+      setLoading(true);
+      let recData = new FormData();
+      recData.append('image', currImage.currentFile);
+      recFaces(recData, (data) => {
+        console.log(data);
+        setFacesRec(data.data.persons);
+        setLoading(false);
+      });
+    }
   };
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
 
@@ -227,15 +283,35 @@ const User = (props) => {
           <Typography variant="h4" gutterBottom>
             User
           </Typography>
-          <Button
-            variant="contained"
-            component={RouterLink}
-            to="#"
-            onClick={() => setOpenCreate(true)}
-            startIcon={<Icon icon={plusFill} />}
-          >
-            New User
-          </Button>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
+            <Box mr={5}>
+              <Button
+                variant="contained"
+                component={RouterLink}
+                to="#"
+                onClick={() => setOpenCreate(true)}
+                startIcon={<Icon icon={plusFill} />}
+                pt={3}
+              >
+                New User
+              </Button>
+            </Box>
+            <Box>
+              <Button
+                variant="contained"
+                // component={RouterLink}
+                to="#"
+                onClick={() => {
+                  setOpenRecFace(true);
+                  setCurrImage(null);
+                  setFacesRec([]);
+                }}
+                startIcon={<Icon icon={cameraFill} />}
+              >
+                Faces Recognition
+              </Button>
+            </Box>
+          </Stack>
         </Stack>
 
         <Card>
@@ -244,7 +320,6 @@ const User = (props) => {
             filterName={filterName}
             onFilterName={handleFilterByName}
           />
-          
 
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
@@ -293,6 +368,9 @@ const User = (props) => {
                               <UserMoreMenu
                                 openDetele={() => openDeteleForm(row)}
                                 openRegisterFace={() => openRegisterFaceHandle(row)}
+                                openPersonFaces={() => {
+                                  setOpenListFaces(true);
+                                }}
                               />
                             </TableCell>
                           </TableRow>
@@ -383,7 +461,7 @@ const User = (props) => {
           onClose={() => {
             setOpenRegisterFace(false);
             setCurrPerson(null);
-            setImageRegister(null);
+            setCurrImage(null);
           }}
         >
           <DialogTitle>Add a Image: {currPerson && currPerson.name}</DialogTitle>
@@ -394,7 +472,7 @@ const User = (props) => {
                 <PhotoCamera />
               </IconButton>
             </label>
-            {imageRegister && <img src={imageRegister.previewImage} alt="" />}
+            {currImage && <img src={currImage.previewImage} alt="" />}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => registerFaceHandle()}>Save</Button>
@@ -402,12 +480,102 @@ const User = (props) => {
               onClick={() => {
                 setOpenRegisterFace(false);
                 setCurrPerson(null);
-                setImageRegister(null);
+                setCurrImage(null);
               }}
             >
               Cancle
             </Button>
           </DialogActions>
+        </Dialog>
+        <Dialog
+          open={openRecFace}
+          onClose={() => {
+            setOpenRecFace(false);
+            setCurrImage(null);
+          }}
+          fullWidth={true}
+          maxWidth={'lg'}
+        >
+          <DialogTitle>Add a Image: {currPerson && currPerson.name}</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
+                  <Box>
+                    <input
+                      accept="image/*"
+                      id="icon-button-photo"
+                      type="file"
+                      onChange={selectFile}
+                    />
+                    <label htmlFor="icon-button-photo">
+                      {/* <IconButton color="primary" component="span">
+                        <PhotoCamera />
+                      </IconButton> */}
+                    </label>
+                  </Box>
+                  <Button onClick={() => recognitionHandle()}>Recognition</Button>
+                </Stack>
+                {currImage && <img src={currImage.previewImage} alt="" />}
+              </Grid>
+              <Grid item xs={6}>
+                <div>
+                  <Typography variant="h5" gutterBottom>
+                    Name:
+                  </Typography>
+                  {loading ? (
+                    <Box sx={{ display: 'flex' }}>
+                      <CircularProgress />
+                    </Box>
+                  ) : (
+                    <List dense={false}>
+                      {facesRec.map((e) => (
+                        <ListItem key={e.uuid}>
+                          <ListItemIcon>
+                            <FaceIcon />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={e.name}
+                            secondary={false ? 'Secondary text' : null}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </div>
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                setOpenRecFace(false);
+                setCurrImage(null);
+              }}
+            >
+              Cancle
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* list faces */}
+        <Dialog fullScreen open={openListFaces} onClose={() => {
+          setOpenListFaces(true)
+        }} TransitionComponent={Transition}>
+          <AppBar sx={{ position: 'relative' }}>
+            <Toolbar>
+              <IconButton edge="start" color="inherit" onClick={() => setOpenListFaces(false)} aria-label="close">
+                <CloseIcon />
+              </IconButton>
+              <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
+                Sound
+              </Typography>
+              <Button autoFocus color="inherit" onClick={() => setOpenListFaces(false)}>
+                save
+              </Button>
+            </Toolbar>
+          </AppBar>
+          <Products />
         </Dialog>
       </Container>
     </Page>

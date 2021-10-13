@@ -51,12 +51,25 @@ const ApiFetching = () => {
         console.log(e.response);
       });
   };
+
+  const recFaces = (data, callback) => {
+    axios
+      .post('/auth/models/recognize', data)
+      .then((res) => {
+        callback(res.data);
+      })
+      .catch((e) => {
+        console.log(e.response);
+      });
+  }
+
   return {
     getFaces,
     getPersons,
     createPersons,
     deletePersons,
-    registerFace
+    registerFace,
+    recFaces
   };
 };
 

@@ -42,6 +42,12 @@ export default function UserMoreMenu(props) {
           </ListItemIcon>
           <ListItemText primary="Register Faces" primaryTypographyProps={{ variant: 'body2' }} />
         </MenuItem>
+        <MenuItem component={RouterLink} to="#" sx={{ color: 'text.secondary' }} onClick={props.openPersonFaces}>
+          <ListItemIcon>
+            <Icon icon={editFill} width={24} height={24} />
+          </ListItemIcon>
+          <ListItemText primary="Get faces" primaryTypographyProps={{ variant: 'body2' }} />
+        </MenuItem>
       </Menu>
     </>
   );

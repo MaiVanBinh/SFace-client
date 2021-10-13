@@ -1,7 +1,7 @@
 import { useFormik } from 'formik';
 import { useEffect, useState } from 'react';
 // material
-import { Container, Stack, Typography } from '@mui/material';
+import { Container, Stack, Typography, Button, Dialog } from '@mui/material';
 // components
 import Page from '../components/Page';
 import {
@@ -11,6 +11,9 @@ import {
   ProductFilterSidebar
 } from '../components/_dashboard/products';
 //
+import { Icon } from '@iconify/react';
+import cameraFill from '@iconify/icons-eva/camera-fill';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import ApiFetching from 'src/utils/apiFetching';
 // ----------------------------------------------------------------------
 import axios from '../axiosInstance';
@@ -18,12 +21,12 @@ import axios from '../axiosInstance';
 export default function EcommerceShop() {
   const [openFilter, setOpenFilter] = useState(false);
   const [faces, setFaces] = useState([]);
-  const {getFaces} = ApiFetching();
+  const { getFaces } = ApiFetching();
 
   useEffect(() => {
     getFaces((data) => {
-      setFaces(data.list)
-    })
+      setFaces(data.list);
+    });
   }, []);
   const formik = useFormik({
     initialValues: {
@@ -56,9 +59,21 @@ export default function EcommerceShop() {
   return (
     <Page title="Dashboard: Products | Minimal-UI">
       <Container>
-        <Typography variant="h4" sx={{ mb: 5 }}>
-          Faces
-        </Typography>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
+          <Typography variant="h4" gutterBottom>
+            Faces
+          </Typography>
+
+          <Button
+            variant="contained"
+            // component={RouterLink}
+            to="#"
+            // onClick={() => setOpenCreate(true)}
+            startIcon={<Icon icon={cameraFill} />}
+          >
+            Faces Recognition
+          </Button>
+        </Stack>
 
         <Stack
           direction="row"
@@ -80,7 +95,7 @@ export default function EcommerceShop() {
         </Stack>
 
         <ProductList faces={faces} />
-        <ProductCartWidget />
+        
       </Container>
     </Page>
   );
