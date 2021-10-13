@@ -18,12 +18,13 @@ import ApiFetching from 'src/utils/apiFetching';
 // ----------------------------------------------------------------------
 import axios from '../axiosInstance';
 
-export default function EcommerceShop() {
+export default function EcommerceShop(props) {
   const [openFilter, setOpenFilter] = useState(false);
   const [faces, setFaces] = useState([]);
   const { getFaces } = ApiFetching();
-
+  const { person } = props;
   useEffect(() => {
+    console.log(person);
     getFaces((data) => {
       setFaces(data.list);
     });
@@ -95,7 +96,6 @@ export default function EcommerceShop() {
         </Stack>
 
         <ProductList faces={faces} />
-        
       </Container>
     </Page>
   );

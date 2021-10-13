@@ -2,11 +2,15 @@ import { filter } from 'lodash';
 import { makeStyles } from '@mui/styles';
 
 import { sentenceCase } from 'change-case';
-import { useEffect, useState, cloneElement, forwardRef } from 'react';
+import { useEffect, useState, cloneElement, forwardRef, useRef } from 'react';
 import plusFill from '@iconify/icons-eva/plus-fill';
+import refreshFill from '@iconify/icons-eva/refresh-fill';
 import { Link as RouterLink } from 'react-router-dom';
 import { connect } from 'react-redux';
 import FaceIcon from '@mui/icons-material/Face';
+import Fab from '@mui/material/Fab';
+import CheckIcon from '@mui/icons-material/Check';
+import SaveIcon from '@mui/icons-material/Save';
 
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -31,6 +35,7 @@ import Products from './Products';
 // material
 import { Icon } from '@iconify/react';
 import CircularProgress from '@mui/material/CircularProgress';
+import { green } from '@mui/material/colors';
 
 import {
   Card,
@@ -123,8 +128,6 @@ function applySortFilter(array, comparator, query) {
 }
 
 const User = (props) => {
-  const classes = useStyles();
-
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [order, setOrder] = useState('asc');
@@ -143,6 +146,33 @@ const User = (props) => {
   const [openRecFace, setOpenRecFace] = useState(false);
   const [loading, setLoading] = useState(false);
   const [facesRec, setFacesRec] = useState([]);
+  const [openTraining, setOpenTraing] = useState(false);
+  const [trainSuccess, setTrainSuccess] = useState(false);
+  const buttonSx = {
+    ...(trainSuccess && {
+      bgcolor: green[500],
+      '&:hover': {
+        bgcolor: green[700]
+      }
+    })
+  };
+  useEffect(() => {
+    return () => {
+      clearTimeout(timer.current);
+    };
+  }, []);
+  const timer = useRef();
+
+  const handleButtonClick = () => {
+    if (!loading) {
+      setTrainSuccess(false);
+      setLoading(true);
+      timer.current = window.setTimeout(() => {
+        setTrainSuccess(true);
+        setLoading(false);
+      }, 2000);
+    }
+  };
 
   const { getPersons, createPersons, deletePersons, registerFace, recFaces } = ApiFetching();
 
@@ -232,6 +262,7 @@ const User = (props) => {
   };
 
   const registerFaceHandle = (face) => {
+    setLoading(true);
     if (currImage && currPerson) {
       let registerData = new FormData();
       registerData.append('image', currImage.currentFile);
@@ -239,7 +270,7 @@ const User = (props) => {
         console.log('register face success');
       });
     }
-
+    setLoading(false);
     setOpenRegisterFace(false);
     setCurrPerson(null);
     setCurrImage(null);
@@ -270,6 +301,10 @@ const User = (props) => {
       });
     }
   };
+  const openPersonFaces = (person) => {
+    setCurrPerson(person);
+    setOpenListFaces(true);
+  };
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
 
   const filteredUsers = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
@@ -294,6 +329,18 @@ const User = (props) => {
                 pt={3}
               >
                 New User
+              </Button>
+            </Box>
+            <Box mr={5}>
+              <Button
+                variant="contained"
+                component={RouterLink}
+                to="#"
+                onClick={() => setOpenCreate(true)}
+                startIcon={<Icon icon={refreshFill} />}
+                pt={3}
+              >
+                Re-Train
               </Button>
             </Box>
             <Box>
@@ -368,9 +415,7 @@ const User = (props) => {
                               <UserMoreMenu
                                 openDetele={() => openDeteleForm(row)}
                                 openRegisterFace={() => openRegisterFaceHandle(row)}
-                                openPersonFaces={() => {
-                                  setOpenListFaces(true);
-                                }}
+                                openPersonFaces={() => openPersonFaces(row)}
                               />
                             </TableCell>
                           </TableRow>
@@ -466,12 +511,21 @@ const User = (props) => {
         >
           <DialogTitle>Add a Image: {currPerson && currPerson.name}</DialogTitle>
           <DialogContent>
-            <input accept="image/*" id="icon-button-photo" type="file" onChange={selectFile} />
-            <label htmlFor="icon-button-photo">
-              <IconButton color="primary" component="span">
-                <PhotoCamera />
-              </IconButton>
-            </label>
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <Box>
+                <input accept="image/*" id="icon-button-photo" type="file" onChange={selectFile} />
+                <label htmlFor="icon-button-photo">
+                  <IconButton color="primary" component="span">
+                    <PhotoCamera />
+                  </IconButton>
+                </label>
+              </Box>
+            )}
+
             {currImage && <img src={currImage.previewImage} alt="" />}
           </DialogContent>
           <DialogActions>
@@ -559,12 +613,22 @@ const User = (props) => {
         </Dialog>
 
         {/* list faces */}
-        <Dialog fullScreen open={openListFaces} onClose={() => {
-          setOpenListFaces(true)
-        }} TransitionComponent={Transition}>
+        <Dialog
+          fullScreen
+          open={openListFaces}
+          onClose={() => {
+            setOpenListFaces(true);
+          }}
+          TransitionComponent={Transition}
+        >
           <AppBar sx={{ position: 'relative' }}>
             <Toolbar>
-              <IconButton edge="start" color="inherit" onClick={() => setOpenListFaces(false)} aria-label="close">
+              <IconButton
+                edge="start"
+                color="inherit"
+                onClick={() => setOpenListFaces(false)}
+                aria-label="close"
+              >
                 <CloseIcon />
               </IconButton>
               <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
@@ -575,7 +639,38 @@ const User = (props) => {
               </Button>
             </Toolbar>
           </AppBar>
-          <Products />
+          <Products person={currPerson} />
+        </Dialog>
+
+        {/* Re-train */}
+        <Dialog
+          open={openTraining}
+          onClose={() => {
+            setOpenRecFace(false);
+            setCurrImage(null);
+          }}
+        >
+          <DialogContent>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ m: 1, position: 'relative' }}>
+                <Fab aria-label="save" color="primary" sx={buttonSx} onClick={handleButtonClick}>
+                  {trainSuccess ? <CheckIcon /> : <SaveIcon />}
+                </Fab>
+                {openTraining && (
+                  <CircularProgress
+                    size={68}
+                    sx={{
+                      color: green[500],
+                      position: 'absolute',
+                      top: -6,
+                      left: -6,
+                      zIndex: 1
+                    }}
+                  />
+                )}
+              </Box>
+            </Box>
+          </DialogContent>
         </Dialog>
       </Container>
     </Page>

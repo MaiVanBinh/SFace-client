@@ -63,6 +63,9 @@ const ApiFetching = () => {
       });
   }
 
+  const getFacesByPersonId = (id, callback) => {
+    axios.get()
+  }
   return {
     getFaces,
     getPersons,
