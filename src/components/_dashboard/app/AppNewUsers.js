@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react';
-import appleFilled from '@iconify/icons-ant-design/apple-filled';
+import usergroup from '@iconify/icons-ant-design/usergroup-add-outlined';
 // material
 import { alpha, styled } from '@mui/material/styles';
 import { Card, Typography } from '@mui/material';
@@ -40,7 +40,7 @@ export default function AppNewUsers({totalPerson}) {
   return (
     <RootStyle>
       <IconWrapperStyle>
-        <Icon icon={appleFilled} width={24} height={24} />
+        <Icon icon={usergroup} width={24} height={24} />
       </IconWrapperStyle>
       <Typography variant="h3">{fShortenNumber(totalPerson)}</Typography>
       <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>

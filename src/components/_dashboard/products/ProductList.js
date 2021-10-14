@@ -20,7 +20,9 @@ const ProductList = ({ personId, persons, onDeleteFace, trainSuccess, ...other }
 
   useEffect(() => {
     const person = persons.find((e) => e.uuid === personId);
-    setFaces(person.faces);
+    if (person) {
+      setFaces(person.faces);
+    }
   }, [persons, personId]);
 
   const deleteImageHandle = () => {

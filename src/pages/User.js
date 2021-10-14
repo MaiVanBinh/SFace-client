@@ -357,8 +357,12 @@ const User = (props) => {
       let recData = new FormData();
       recData.append('image', currImage.currentFile);
       recFaces(recData, (data) => {
-        console.log(data);
-        setFacesRec(data.data.persons);
+        if (data.data.persons && data.data.persons.length > 0) {
+          setFacesRec(data.data.persons);
+        } else {
+          setFacesRec([{uuid: "unknow", name: "unknow"}])
+        }
+
         setLoading(false);
       });
     }
@@ -609,7 +613,6 @@ const User = (props) => {
           open={openRegisterFace}
           onClose={() => {
             setOpenRegisterFace(false);
-            setCurrPerson(null);
             setCurrImage(null);
           }}
         >
