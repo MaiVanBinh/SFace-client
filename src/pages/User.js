@@ -166,7 +166,7 @@ const User = (props) => {
   const [openTraining, setOpenTraing] = useState(false);
   const [trainSuccess, setTrainSuccess] = useState(true);
   const { persons, setPersonsStore, onRegisterFace } = props;
-  const [nameError, setNameError] = useState(false);
+  const [isChangeText, setIsChangeText] = useState(false);
 
   const buttonSx = {
     ...(trainSuccess && {
@@ -246,9 +246,7 @@ const User = (props) => {
       setWarning(true);
       return;
     }
-    if (name === '') {
-      setNameError(true);
-    }
+
     createPersons({ name: name }, () => {
       getPersons(page, rowsPerPage, (data) => {
         setPersonsStore(data.list);
@@ -388,7 +386,10 @@ const User = (props) => {
                 variant="contained"
                 component={RouterLink}
                 to="#"
-                onClick={() => setOpenCreate(true)}
+                onClick={() => {
+                  setOpenCreate(true);
+                  setIsChangeText(false);
+                }}
                 startIcon={<Icon icon={plusFill} />}
                 pt={3}
               >
@@ -565,9 +566,12 @@ const User = (props) => {
               fullWidth
               variant="standard"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={name === ''}
-              helperText={name === '' ? 'Empty field!' : ' '}
+              onChange={(e) => {
+                setIsChangeText(true);
+                setName(e.target.value);
+              }}
+              error={name === '' && isChangeText}
+              helperText={name === '' && isChangeText ? 'Empty field!' : ' '}
             />
           </DialogContent>
           <DialogActions>
@@ -609,7 +613,7 @@ const User = (props) => {
             setCurrImage(null);
           }}
         >
-          <DialogTitle>Add a Image: {currPerson && currPerson.name}</DialogTitle>
+          <DialogTitle>Register one more face to: {currPerson && currPerson.name}</DialogTitle>
           <DialogContent>
             {loading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -618,18 +622,18 @@ const User = (props) => {
             ) : (
               <Box>
                 <input accept="image/*" id="icon-button-photo" type="file" onChange={selectFile} />
-                <label htmlFor="icon-button-photo">
+                {/* <label htmlFor="icon-button-photo">
                   <IconButton color="primary" component="span">
                     <PhotoCamera />
                   </IconButton>
-                </label>
+                </label> */}
               </Box>
             )}
 
             {currImage && <img src={currImage.previewImage} alt="" />}
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => registerFaceHandle()}>Save</Button>
+            <Button onClick={() => registerFaceHandle()}>Register</Button>
             <Button
               onClick={() => {
                 setOpenRegisterFace(false);
@@ -649,34 +653,15 @@ const User = (props) => {
             setCurrImage(null);
           }}
           fullWidth={true}
-          maxWidth={'lg'}
+          maxWidth={'sm'}
         >
-          <DialogTitle>Add a Image: {currPerson && currPerson.name}</DialogTitle>
+          {/* <DialogTitle>Add a Image:</DialogTitle> */}
           <DialogContent>
             <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-                  <Box>
-                    <input
-                      accept="image/*"
-                      id="icon-button-photo"
-                      type="file"
-                      onChange={selectFile}
-                    />
-                    <label htmlFor="icon-button-photo">
-                      {/* <IconButton color="primary" component="span">
-                        <PhotoCamera />
-                      </IconButton> */}
-                    </label>
-                  </Box>
-                  <Button onClick={() => recognitionHandle()}>Recognition</Button>
-                </Stack>
-                {currImage && <img src={currImage.previewImage} alt="" />}
-              </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={12}>
                 <div>
                   <Typography variant="h5" gutterBottom>
-                    Name:
+                    Persons:
                   </Typography>
                   {loading ? (
                     <Box sx={{ display: 'flex' }}>
@@ -699,9 +684,26 @@ const User = (props) => {
                   )}
                 </div>
               </Grid>
+              <Grid item xs={12}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
+                  <Box>
+                    <input
+                      accept="image/*"
+                      id="icon-button-photo"
+                      type="file"
+                      onChange={selectFile}
+                    />
+                    <label htmlFor="icon-button-photo"></label>
+                  </Box>
+                </Stack>
+                {currImage && (
+                  <img src={currImage.previewImage} alt="" style={{ maxHeight: '500px' }} />
+                )}
+              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
+            <Button onClick={() => recognitionHandle()}>Recognition</Button>
             <Button
               onClick={() => {
                 setOpenRecFace(false);
