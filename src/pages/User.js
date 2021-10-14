@@ -7,6 +7,8 @@ import plusFill from '@iconify/icons-eva/plus-fill';
 import refreshFill from '@iconify/icons-eva/refresh-fill';
 import { Link as RouterLink } from 'react-router-dom';
 import { connect } from 'react-redux';
+import * as actionsType from '../reduxConfig/store/actionTypes';
+
 import FaceIcon from '@mui/icons-material/Face';
 import Fab from '@mui/material/Fab';
 import CheckIcon from '@mui/icons-material/Check';
@@ -31,6 +33,7 @@ import Toolbar from '@mui/material/Toolbar';
 import CloseIcon from '@mui/icons-material/Close';
 import Divider from '@mui/material/Divider';
 import Products from './Products';
+import Alert from '@mui/material/Alert';
 
 // material
 import { Icon } from '@iconify/react';
@@ -67,6 +70,8 @@ import * as actions from '../reduxConfig/store/index';
 import { set } from 'date-fns';
 import ApiFetching from 'src/utils/apiFetching';
 import { get } from 'lodash-es';
+import { styled } from '@mui/material/styles';
+
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
@@ -89,14 +94,6 @@ const useStyles = makeStyles({
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
-
-function generate(data, element) {
-  return [0, 1, 2].map((value) =>
-    cloneElement(element, {
-      key: value
-    })
-  );
-}
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -127,7 +124,30 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
+const RootStyle = styled('div')(({ theme }) => ({
+  zIndex: 999,
+  right: 0,
+  display: 'flex',
+  cursor: 'pointer',
+  position: 'fixed',
+  alignItems: 'center',
+  bottom: theme.spacing(0),
+  height: theme.spacing(5),
+  paddingLeft: theme.spacing(2),
+  paddingRight: theme.spacing(2),
+  paddingTop: theme.spacing(1.25),
+  boxShadow: theme.customShadows.z20,
+  color: theme.palette.text.primary,
+  backgroundColor: theme.palette.background.paper,
+  borderTopLeftRadius: theme.shape.borderRadiusMd,
+  borderBottomLeftRadius: theme.shape.borderRadiusMd,
+  transition: theme.transitions.create('opacity'),
+  '&:hover': { opacity: 0.72 }
+}));
+
 const User = (props) => {
+  const [warning, setWarning] = useState(false);
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [order, setOrder] = useState('asc');
@@ -141,13 +161,14 @@ const User = (props) => {
   const [name, setName] = useState('');
   const [currPerson, setCurrPerson] = useState(null);
   const [currImage, setCurrImage] = useState(null);
-  const [persons, setPersons] = useState([]);
   const [totalPersons, setTotalPersons] = useState(0);
   const [openRecFace, setOpenRecFace] = useState(false);
   const [loading, setLoading] = useState(false);
   const [facesRec, setFacesRec] = useState([]);
   const [openTraining, setOpenTraing] = useState(false);
-  const [trainSuccess, setTrainSuccess] = useState(false);
+  const [trainSuccess, setTrainSuccess] = useState(true);
+  const { persons, setPersonsStore, onRegisterFace } = props;
+
   const buttonSx = {
     ...(trainSuccess && {
       bgcolor: green[500],
@@ -156,35 +177,58 @@ const User = (props) => {
       }
     })
   };
-  useEffect(() => {
-    return () => {
-      clearTimeout(timer.current);
-    };
-  }, []);
-  const timer = useRef();
 
-  const handleButtonClick = () => {
-    if (!loading) {
-      setTrainSuccess(false);
-      setLoading(true);
-      timer.current = window.setTimeout(() => {
-        setTrainSuccess(true);
-        setLoading(false);
-      }, 2000);
+  const sleep = (milliseconds) => {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  };
+  const {
+    getPersons,
+    createPersons,
+    deletePersons,
+    registerFace,
+    recFaces,
+    reTrain,
+    checkStatusTrain
+  } = ApiFetching();
+
+  const startReTrain = () => {
+    if (!trainSuccess) {
+      setWarning(true);
+      return;
     }
+    setTrainSuccess(false);
+    reTrain();
   };
 
-  const { getPersons, createPersons, deletePersons, registerFace, recFaces } = ApiFetching();
+  useEffect(async () => {
+    while (!trainSuccess) {
+      await sleep(500);
+      const data = await checkStatusTrain();
+      if (data && data.status === 'complete') {
+        setTrainSuccess(true);
+      }
+    }
+  }, [trainSuccess]);
+
+  useEffect(async () => {
+    const data = await checkStatusTrain();
+    if (data && data.status !== 'complete') {
+      setTrainSuccess(false);
+    }
+  }, []);
 
   const deletePersonHandle = () => {
-    console.log(currPerson);
+    if (!trainSuccess) {
+      setWarning(true);
+      return;
+    }
     if (currPerson) {
       deletePersons(currPerson.uuid, () => {
-        setOpenDelete(false);
-        getPersons((data) => {
-          setPersons(data.list);
+        getPersons(page, rowsPerPage, (data) => {
+          setPersonsStore(data.list);
           setTotalPersons(data.paging.total);
         });
+        setOpenDelete(false);
       });
     }
   };
@@ -196,23 +240,28 @@ const User = (props) => {
   };
 
   const createPersonHandle = () => {
+    if (!trainSuccess) {
+      setWarning(true);
+      return;
+    }
     createPersons({ name: name }, () => {
-      getPersons((data) => {
-        setPersons(data.list);
+      getPersons(page, rowsPerPage, (data) => {
+        setPersonsStore(data.list);
         setCurrPerson(null);
         setOpenCreate(false);
         setName('');
+        setTotalPersons(data.paging.total);
       });
     });
   };
 
   useEffect(() => {
     // onFetchPersons('token');
-    getPersons((data) => {
-      setPersons(data.list);
+    getPersons(page, rowsPerPage, (data) => {
+      setPersonsStore(data.list);
       setTotalPersons(data.paging.total);
     });
-  }, []);
+  }, [page, rowsPerPage]);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -247,7 +296,6 @@ const User = (props) => {
     setSelected(newSelected);
   };
 
-  useEffect(() => {});
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -262,22 +310,33 @@ const User = (props) => {
   };
 
   const registerFaceHandle = (face) => {
+    if (!trainSuccess) {
+      setWarning(true);
+      return;
+    }
     setLoading(true);
     if (currImage && currPerson) {
       let registerData = new FormData();
       registerData.append('image', currImage.currentFile);
-      registerFace(registerData, currPerson.uuid, () => {
-        console.log('register face success');
+      registerFace(registerData, currPerson.uuid, (data) => {
+        data.personId = currPerson.uuid;
+        onRegisterFace(data);
+        setLoading(false);
+        setOpenRegisterFace(false);
+        setCurrImage(null);
       });
+    } else {
+      setLoading(false);
+      setOpenRegisterFace(false);
+      setCurrImage(null);
     }
-    setLoading(false);
-    setOpenRegisterFace(false);
-    setCurrPerson(null);
-    setCurrImage(null);
   };
 
   const openRegisterFaceHandle = (row) => {
-    setCurrPerson(row);
+    if (!trainSuccess) {
+      setWarning(true);
+      return;
+    }
     setOpenRegisterFace(true);
   };
   const selectFile = (event) => {
@@ -312,11 +371,11 @@ const User = (props) => {
   const isUserNotFound = filteredUsers.length === 0;
 
   return (
-    <Page title="User | Minimal-UI">
+    <Page title="Persons | S-Faces">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            User
+            Persons
           </Typography>
           <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
             <Box mr={5}>
@@ -328,7 +387,7 @@ const User = (props) => {
                 startIcon={<Icon icon={plusFill} />}
                 pt={3}
               >
-                New User
+                New Person
               </Button>
             </Box>
             <Box mr={5}>
@@ -336,7 +395,7 @@ const User = (props) => {
                 variant="contained"
                 component={RouterLink}
                 to="#"
-                onClick={() => setOpenCreate(true)}
+                onClick={() => startReTrain()}
                 startIcon={<Icon icon={refreshFill} />}
                 pt={3}
               >
@@ -362,11 +421,11 @@ const User = (props) => {
         </Stack>
 
         <Card>
-          <UserListToolbar
+          {/* <UserListToolbar
             numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
-          />
+          /> */}
 
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
@@ -383,10 +442,12 @@ const User = (props) => {
                 <TableBody>
                   {persons
                     ? persons.map((row) => {
-                        const { uuid, name } = row;
+                        const { uuid, name, faces } = row;
                         const isItemSelected = selected.indexOf(name) !== -1;
                         const avatarUrl =
-                          'https://minimal-kit-react.vercel.app/static/mock-images/avatars/avatar_12.jpg';
+                          faces && faces.length > 0
+                            ? faces[0]['filename']
+                            : 'https://minimal-kit-react.vercel.app/static/mock-images/avatars/avatar_12.jpg';
                         return (
                           <TableRow
                             hover
@@ -396,13 +457,13 @@ const User = (props) => {
                             selected={isItemSelected}
                             aria-checked={isItemSelected}
                           >
-                            {/* <TableCell padding="checkbox">
-                              <Checkbox
-                                checked={isItemSelected}
-                                onChange={(event) => handleClick(event, name)}
-                              />
-                            </TableCell> */}
-                            <TableCell component="th" scope="row" padding="normal">
+                            <TableCell
+                              component="th"
+                              scope="row"
+                              padding="normal"
+                              onClick={() => openPersonFaces(row)}
+                              width="90%"
+                            >
                               <Stack direction="row" alignItems="center" spacing={2}>
                                 <Avatar alt={name} src={avatarUrl} />
                                 <Typography variant="subtitle2" noWrap>
@@ -412,11 +473,7 @@ const User = (props) => {
                             </TableCell>
 
                             <TableCell align="right">
-                              <UserMoreMenu
-                                openDetele={() => openDeteleForm(row)}
-                                openRegisterFace={() => openRegisterFaceHandle(row)}
-                                openPersonFaces={() => openPersonFaces(row)}
-                              />
+                              <UserMoreMenu openDetele={() => openDeteleForm(row)} />
                             </TableCell>
                           </TableRow>
                         );
@@ -471,6 +528,8 @@ const User = (props) => {
               variant="standard"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              error={name === ''}
+              helperText={name === '' ? 'Empty field!' : ' '}
             />
           </DialogContent>
           <DialogActions>
@@ -486,6 +545,7 @@ const User = (props) => {
           </DialogActions>
         </Dialog>
 
+        {/* delete person */}
         <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
           <DialogTitle>Delete Person: {currPerson && currPerson.name}</DialogTitle>
 
@@ -501,6 +561,8 @@ const User = (props) => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Register faces */}
         <Dialog
           open={openRegisterFace}
           onClose={() => {
@@ -533,7 +595,6 @@ const User = (props) => {
             <Button
               onClick={() => {
                 setOpenRegisterFace(false);
-                setCurrPerson(null);
                 setCurrImage(null);
               }}
             >
@@ -541,6 +602,8 @@ const User = (props) => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Recface */}
         <Dialog
           open={openRecFace}
           onClose={() => {
@@ -632,31 +695,25 @@ const User = (props) => {
                 <CloseIcon />
               </IconButton>
               <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                Sound
+                {currPerson ? currPerson.name : ''}
               </Typography>
-              <Button autoFocus color="inherit" onClick={() => setOpenListFaces(false)}>
-                save
+              <Button autoFocus color="inherit" onClick={() => openRegisterFaceHandle()}>
+                Register Face
               </Button>
             </Toolbar>
           </AppBar>
-          <Products person={currPerson} />
+          <Products personId={currPerson ? currPerson.uuid : ''} trainSuccess={trainSuccess} />
         </Dialog>
 
         {/* Re-train */}
-        <Dialog
-          open={openTraining}
-          onClose={() => {
-            setOpenRecFace(false);
-            setCurrImage(null);
-          }}
-        >
+        {/* <Dialog open={!trainSuccess}>
           <DialogContent>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Box sx={{ m: 1, position: 'relative' }}>
-                <Fab aria-label="save" color="primary" sx={buttonSx} onClick={handleButtonClick}>
-                  {trainSuccess ? <CheckIcon /> : <SaveIcon />}
+                <Fab aria-label="save" color="primary" sx={buttonSx}>
+                  {false ? <CheckIcon /> : <SaveIcon />}
                 </Fab>
-                {openTraining && (
+                {true && (
                   <CircularProgress
                     size={68}
                     sx={{
@@ -671,7 +728,18 @@ const User = (props) => {
               </Box>
             </Box>
           </DialogContent>
+        </Dialog> */}
+        {/* warning */}
+        <Dialog open={warning} onClose={() => setWarning(false)}>
+          <DialogTitle>Wait for training process complete!</DialogTitle>
         </Dialog>
+
+        {!trainSuccess && (
+          <RootStyle>
+            <CircularProgress size={20} />
+            Training
+          </RootStyle>
+        )}
       </Container>
     </Page>
   );
@@ -685,10 +753,16 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    onFetchPersons: (token) => dispatch(actions.fetchPersons(token)),
-    onCreatePerson: (token, payload) => dispatch(actions.createPerson(token, payload)),
-    onDeletePerson: (token, payload) => dispatch(actions.deletePerson(token, payload)),
-    onRegisterFace: (token, payload) => dispatch(actions.registerFace(token, payload))
+    onRegisterFace: (payload) =>
+      dispatch({
+        type: actionsType.REGISTER_FACE,
+        payload
+      }),
+    setPersonsStore: (payload) =>
+      dispatch({
+        type: actionsType.SET_PERSONS,
+        payload
+      })
   };
 }
 

@@ -20,14 +20,11 @@ import axios from '../axiosInstance';
 
 export default function EcommerceShop(props) {
   const [openFilter, setOpenFilter] = useState(false);
-  const [faces, setFaces] = useState([]);
   const { getFaces } = ApiFetching();
-  const { person } = props;
+
+  const { faces, personId, trainSuccess} = props;
   useEffect(() => {
-    console.log(person);
-    getFaces((data) => {
-      setFaces(data.list);
-    });
+    console.log(faces);
   }, []);
   const formik = useFormik({
     initialValues: {
@@ -58,44 +55,9 @@ export default function EcommerceShop(props) {
   };
 
   return (
-    <Page title="Dashboard: Products | Minimal-UI">
-      <Container>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-          <Typography variant="h4" gutterBottom>
-            Faces
-          </Typography>
-
-          <Button
-            variant="contained"
-            // component={RouterLink}
-            to="#"
-            // onClick={() => setOpenCreate(true)}
-            startIcon={<Icon icon={cameraFill} />}
-          >
-            Faces Recognition
-          </Button>
-        </Stack>
-
-        <Stack
-          direction="row"
-          flexWrap="wrap-reverse"
-          alignItems="center"
-          justifyContent="flex-end"
-          sx={{ mb: 5 }}
-        >
-          <Stack direction="row" spacing={1} flexShrink={0} sx={{ my: 1 }}>
-            <ProductFilterSidebar
-              formik={formik}
-              isOpenFilter={openFilter}
-              onResetFilter={handleResetFilter}
-              onOpenFilter={handleOpenFilter}
-              onCloseFilter={handleCloseFilter}
-            />
-            <ProductSort />
-          </Stack>
-        </Stack>
-
-        <ProductList faces={faces} />
+    <Page title="Faces | S-Faces">
+      <Container sx={{ mb: 10 }}>
+        <ProductList faces={faces ? faces : []} mt={5} personId={personId} trainSuccess={trainSuccess}/>
       </Container>
     </Page>
   );

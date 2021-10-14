@@ -29,64 +29,23 @@ ShopProductCard.propTypes = {
   product: PropTypes.object
 };
 
-
-
-export default function ShopProductCard({ face }) {
-  const { filename, id, person } = face;
+export default function ShopProductCard(props) {
+  const { face, deleteFace, trainSuccess } = props;
 
   return (
     <Card>
       <Box sx={{ pt: '100%', position: 'relative' }}>
-        {/* {status && (
-          <Label
-            variant="filled"
-            color={(status === 'sale' && 'error') || 'info'}
-            sx={{
-              zIndex: 9,
-              top: 16,
-              right: 16,
-              position: 'absolute',
-              textTransform: 'uppercase'
-            }}
+        <ProductImgStyle alt={face.id} src={face.filename} />
+        {trainSuccess && (
+          <IconButton
+            size="large"
+            style={{ position: 'absolute', top: 10, right: 10, backgroundColor: '#ccc' }}
+            onClick={deleteFace}
           >
-            {status}
-          </Label>
-        )} */}
-        <ProductImgStyle alt={id} src={filename} />
-      </Box>
-      <Grid container spacing={2}>
-        <Grid item xs={6}>
-          <Typography variant="subtitle2" noWrap>
-            {person ? person.name : 'unknow'}
-          </Typography>
-        </Grid>
-        <Grid item xs={6}>
-          <IconButton size="large">
             <Icon icon={trash2Fill} />
           </IconButton>
-        </Grid>
-      </Grid>
-      {/* <Stack spacing={2} direction="row" sx={{ p: 3 }}>
-      
-      {/* //trash2Fill */}
-      {/* <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <ColorPreview colors={colors} />
-          <Typography variant="subtitle1">
-            <Typography
-              component="span"
-              variant="body1"
-              sx={{
-                color: 'text.disabled',
-                textDecoration: 'line-through'
-              }}
-            >
-              {priceSale && fCurrency(priceSale)}
-            </Typography>
-            &nbsp;
-            {fCurrency(price)}
-          </Typography>
-        </Stack> */}
-      {/* </Stack> */}
+        )}
+      </Box>
     </Card>
   );
 }

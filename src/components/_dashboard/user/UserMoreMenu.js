@@ -15,10 +15,10 @@ export default function UserMoreMenu(props) {
 
   return (
     <>
-      <IconButton ref={ref} onClick={() => setIsOpen(true)}>
-        <Icon icon={moreVerticalFill} width={20} height={20} />
+      <IconButton ref={ref} onClick={() => setIsOpen(true)}  onClick={props.openDetele}>
+        <Icon icon={trash2Outline} width={20} height={20} />
       </IconButton>
-
+{/* 
       <Menu
         open={isOpen}
         anchorEl={ref.current}
@@ -48,7 +48,7 @@ export default function UserMoreMenu(props) {
           </ListItemIcon>
           <ListItemText primary="Get faces" primaryTypographyProps={{ variant: 'body2' }} />
         </MenuItem>
-      </Menu>
+      </Menu> */}
     </>
   );
 }

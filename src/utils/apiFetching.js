@@ -17,9 +17,14 @@ const ApiFetching = () => {
   // PERSONS
   // -------------------------
 
-  const getPersons = (callback) => {
+  const getPersons = (page, perPage, callback) => {
+    const params = new URLSearchParams({
+      page: page + 1,
+      per_page: perPage
+    }).toString();
+
     axios
-      .get('/auth/persons')
+      .get('/auth/persons?' + params, )
       .then((res) => {
         callback(res.data.data);
       })
@@ -44,8 +49,8 @@ const ApiFetching = () => {
     axios
       .post('/auth/persons/' + uid + '/face', data)
       .then((res) => {
-        console.log(res.data);
-        callback();
+        console.log();
+        callback(res.data.data);
       })
       .catch((e) => {
         console.log(e.response);
@@ -63,8 +68,23 @@ const ApiFetching = () => {
       });
   }
 
-  const getFacesByPersonId = (id, callback) => {
-    axios.get()
+  const deleteFaceById = (id, callback) => {
+    axios.delete('/auth/faces/' + id)
+    .then(() => {
+      callback();
+    })
+    .catch((e) => {
+      console.log(e.response);
+    });
+  }
+
+  const reTrain = () => {
+    axios.get('/auth/models/re-train');
+  }
+
+  const checkStatusTrain = async (callback) => {
+    const res = await axios.get('/auth/models/status');
+    return res.data.data;
   }
   return {
     getFaces,
@@ -72,7 +92,10 @@ const ApiFetching = () => {
     createPersons,
     deletePersons,
     registerFace,
-    recFaces
+    recFaces,
+    deleteFaceById,
+    reTrain,
+    checkStatusTrain
   };
 };
 
