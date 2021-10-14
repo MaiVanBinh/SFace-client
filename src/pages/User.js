@@ -75,11 +75,9 @@ import { styled } from '@mui/material/styles';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name', alignRight: false },
-  // { id: 'company', label: 'Company', alignRight: false },
-  // { id: 'role', label: 'Role', alignRight: false },
-  // { id: 'isVerified', label: 'Verified', alignRight: false },
-  // { id: 'status', label: 'Status', alignRight: false },
+  { id: 'ID', label: 'ID', alignRight: false },
+  { id: 'Persons', label: 'Persons', alignRight: false },
+  { id: 'Faces', label: 'Faces', alignRight: false },
   { id: '' }
 ];
 
@@ -168,6 +166,7 @@ const User = (props) => {
   const [openTraining, setOpenTraing] = useState(false);
   const [trainSuccess, setTrainSuccess] = useState(true);
   const { persons, setPersonsStore, onRegisterFace } = props;
+  const [nameError, setNameError] = useState(false);
 
   const buttonSx = {
     ...(trainSuccess && {
@@ -201,10 +200,13 @@ const User = (props) => {
   };
 
   useEffect(async () => {
-    while (!trainSuccess) {
-      await sleep(500);
+    let stop = false;
+
+    while (!stop) {
+      await sleep(2000);
       const data = await checkStatusTrain();
       if (data && data.status === 'complete') {
+        stop = true;
         setTrainSuccess(true);
       }
     }
@@ -243,6 +245,9 @@ const User = (props) => {
     if (!trainSuccess) {
       setWarning(true);
       return;
+    }
+    if (name === '') {
+      setNameError(true);
     }
     createPersons({ name: name }, () => {
       getPersons(page, rowsPerPage, (data) => {
@@ -396,7 +401,13 @@ const User = (props) => {
                 component={RouterLink}
                 to="#"
                 onClick={() => startReTrain()}
-                startIcon={<Icon icon={refreshFill} />}
+                startIcon={
+                  trainSuccess ? (
+                    <Icon icon={refreshFill} />
+                  ) : (
+                    <CircularProgress size={20} color="inherit" />
+                  )
+                }
                 pt={3}
               >
                 Re-Train
@@ -462,12 +473,39 @@ const User = (props) => {
                               scope="row"
                               padding="normal"
                               onClick={() => openPersonFaces(row)}
-                              width="90%"
+                              width="30%"
+                            >
+                              <Stack direction="row" alignItems="center" spacing={2}>
+                                <Typography variant="subtitle2" noWrap>
+                                  {uuid}
+                                </Typography>
+                              </Stack>
+                            </TableCell>
+
+                            <TableCell
+                              component="th"
+                              scope="row"
+                              padding="normal"
+                              onClick={() => openPersonFaces(row)}
+                              width="30%"
                             >
                               <Stack direction="row" alignItems="center" spacing={2}>
                                 <Avatar alt={name} src={avatarUrl} />
                                 <Typography variant="subtitle2" noWrap>
                                   {name}
+                                </Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell
+                              component="th"
+                              scope="row"
+                              padding="normal"
+                              onClick={() => openPersonFaces(row)}
+                              width="30%"
+                            >
+                              <Stack direction="row" alignItems="center" spacing={2}>
+                                <Typography variant="subtitle2" noWrap>
+                                  {faces.length}
                                 </Typography>
                               </Stack>
                             </TableCell>
@@ -540,7 +578,7 @@ const User = (props) => {
                 setName('');
               }}
             >
-              Cancle
+              Cancel
             </Button>
           </DialogActions>
         </Dialog>
@@ -557,7 +595,7 @@ const User = (props) => {
                 setCurrPerson(null);
               }}
             >
-              Cancle
+              Cancel
             </Button>
           </DialogActions>
         </Dialog>
@@ -598,7 +636,7 @@ const User = (props) => {
                 setCurrImage(null);
               }}
             >
-              Cancle
+              Cancel
             </Button>
           </DialogActions>
         </Dialog>
@@ -670,7 +708,7 @@ const User = (props) => {
                 setCurrImage(null);
               }}
             >
-              Cancle
+              Cancel
             </Button>
           </DialogActions>
         </Dialog>
@@ -705,41 +743,10 @@ const User = (props) => {
           <Products personId={currPerson ? currPerson.uuid : ''} trainSuccess={trainSuccess} />
         </Dialog>
 
-        {/* Re-train */}
-        {/* <Dialog open={!trainSuccess}>
-          <DialogContent>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ m: 1, position: 'relative' }}>
-                <Fab aria-label="save" color="primary" sx={buttonSx}>
-                  {false ? <CheckIcon /> : <SaveIcon />}
-                </Fab>
-                {true && (
-                  <CircularProgress
-                    size={68}
-                    sx={{
-                      color: green[500],
-                      position: 'absolute',
-                      top: -6,
-                      left: -6,
-                      zIndex: 1
-                    }}
-                  />
-                )}
-              </Box>
-            </Box>
-          </DialogContent>
-        </Dialog> */}
         {/* warning */}
         <Dialog open={warning} onClose={() => setWarning(false)}>
           <DialogTitle>Wait for training process complete!</DialogTitle>
         </Dialog>
-
-        {!trainSuccess && (
-          <RootStyle>
-            <CircularProgress size={20} />
-            Training
-          </RootStyle>
-        )}
       </Container>
     </Page>
   );
