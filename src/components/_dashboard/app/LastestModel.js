@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react';
-import bugFilled from '@iconify/icons-ant-design/bug-filled';
+import fileFilled from '@iconify/icons-ant-design/file-markdown-filled';
 // material
 import { alpha, styled } from '@mui/material/styles';
 import { Card, Typography } from '@mui/material';
@@ -36,15 +36,15 @@ const IconWrapperStyle = styled('div')(({ theme }) => ({
 
 const TOTAL = 234;
 
-export default function AppBugReports() {
+export default function LastestModel({modelInfo}) {
   return (
     <RootStyle>
       <IconWrapperStyle>
-        <Icon icon={bugFilled} width={24} height={24} />
+        <Icon icon={fileFilled} width={24} height={24} />
       </IconWrapperStyle>
-      <Typography variant="h3">{fShortenNumber(TOTAL)}</Typography>
+      <Typography variant="h3">Model</Typography>
       <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
-        Bug Reports
+        Time: {modelInfo && modelInfo.time.split('T')[0] } / Persons: {modelInfo && modelInfo.persons }
       </Typography>
     </RootStyle>
   );

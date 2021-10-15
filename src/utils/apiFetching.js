@@ -45,7 +45,7 @@ const ApiFetching = () => {
     });
   };
 
-  const registerFace = (data, uid, callback) => {
+  const registerFace = (data, uid, callback, callbackErr) => {
     axios
       .post('/auth/persons/' + uid + '/face', data)
       .then((res) => {
@@ -53,7 +53,7 @@ const ApiFetching = () => {
         callback(res.data.data);
       })
       .catch((e) => {
-        console.log(e.response);
+        callbackErr()
       });
   };
 
@@ -86,6 +86,14 @@ const ApiFetching = () => {
     const res = await axios.get('/auth/models/status');
     return res.data.data;
   }
+
+  const getFacesCount = (callback) => {
+    axios.get('/auth/faces/count').then(res => callback(res.data));
+  }
+
+  const getLastestModelInfo = (callback) => {
+    axios.get('/auth/models/latest').then(res => callback(res.data));
+  }
   return {
     getFaces,
     getPersons,
@@ -95,7 +103,9 @@ const ApiFetching = () => {
     recFaces,
     deleteFaceById,
     reTrain,
-    checkStatusTrain
+    checkStatusTrain,
+    getFacesCount,
+    getLastestModelInfo
   };
 };
 

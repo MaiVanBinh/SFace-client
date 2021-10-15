@@ -167,6 +167,7 @@ const User = (props) => {
   const [trainSuccess, setTrainSuccess] = useState(true);
   const { persons, setPersonsStore, onRegisterFace } = props;
   const [isChangeText, setIsChangeText] = useState(false);
+  const [registerFaceErr, setRegisterFaceErr] = useState(false);
 
   const buttonSx = {
     ...(trainSuccess && {
@@ -326,6 +327,11 @@ const User = (props) => {
         onRegisterFace(data);
         setLoading(false);
         setOpenRegisterFace(false);
+        setCurrImage(null);
+      }, () => {
+        setRegisterFaceErr(true);
+        setLoading(false);
+        // setOpenRegisterFace(false);
         setCurrImage(null);
       });
     } else {
@@ -745,6 +751,10 @@ const User = (props) => {
         {/* warning */}
         <Dialog open={warning} onClose={() => setWarning(false)}>
           <DialogTitle>Wait for training process complete!</DialogTitle>
+        </Dialog>
+
+        <Dialog open={registerFaceErr} onClose={() => setRegisterFaceErr(false)}>
+          <DialogTitle>Face registration failed because no faces were detected.</DialogTitle>
         </Dialog>
       </Container>
     </Page>
