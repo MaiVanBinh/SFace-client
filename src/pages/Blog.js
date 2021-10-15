@@ -22,7 +22,7 @@ const SORT_OPTIONS = [
 export default function Blog() {
   return (
     <Page title="Dashboard: Blog | Minimal-UI">
-      <Container>
+      <Container sx={{padding: '0 !important', maxWidth: "unset !important"}}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
             Blog

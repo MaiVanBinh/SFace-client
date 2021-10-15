@@ -56,7 +56,7 @@ export default function EcommerceShop(props) {
 
   return (
     <Page title="Faces | S-Faces">
-      <Container sx={{ mb: 10 }}>
+      <Container sx={{padding: '0 !important', maxWidth: "unset !important"}}>
         <ProductList faces={faces ? faces : []} mt={5} personId={personId} trainSuccess={trainSuccess}/>
       </Container>
     </Page>

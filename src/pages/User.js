@@ -379,7 +379,7 @@ const User = (props) => {
 
   return (
     <Page title="Persons | S-Faces">
-      <Container>
+      <Container sx={{padding: '0 !important', maxWidth: "unset !important"}}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
             Persons
