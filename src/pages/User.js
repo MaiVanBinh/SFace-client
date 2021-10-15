@@ -75,8 +75,8 @@ import { styled } from '@mui/material/styles';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'ID', label: 'ID', alignRight: false },
   { id: 'Persons', label: 'Persons', alignRight: false },
+  { id: 'ID', label: 'ID', alignRight: false },
   { id: 'Faces', label: 'Faces', alignRight: false },
   { id: '' }
 ];
@@ -360,7 +360,7 @@ const User = (props) => {
         if (data.data.persons && data.data.persons.length > 0) {
           setFacesRec(data.data.persons);
         } else {
-          setFacesRec([{uuid: "unknow", name: "unknow"}])
+          setFacesRec([{ uuid: 'unknow', name: 'unknow' }]);
         }
 
         setLoading(false);
@@ -481,12 +481,12 @@ const User = (props) => {
                               width="30%"
                             >
                               <Stack direction="row" alignItems="center" spacing={2}>
+                                <Avatar alt={name} src={avatarUrl} />
                                 <Typography variant="subtitle2" noWrap>
-                                  {uuid}
+                                  {name}
                                 </Typography>
                               </Stack>
                             </TableCell>
-
                             <TableCell
                               component="th"
                               scope="row"
@@ -495,9 +495,8 @@ const User = (props) => {
                               width="30%"
                             >
                               <Stack direction="row" alignItems="center" spacing={2}>
-                                <Avatar alt={name} src={avatarUrl} />
                                 <Typography variant="subtitle2" noWrap>
-                                  {name}
+                                  {uuid}
                                 </Typography>
                               </Stack>
                             </TableCell>
@@ -625,11 +624,6 @@ const User = (props) => {
             ) : (
               <Box>
                 <input accept="image/*" id="icon-button-photo" type="file" onChange={selectFile} />
-                {/* <label htmlFor="icon-button-photo">
-                  <IconButton color="primary" component="span">
-                    <PhotoCamera />
-                  </IconButton>
-                </label> */}
               </Box>
             )}
 
@@ -664,7 +658,7 @@ const User = (props) => {
               <Grid item xs={12}>
                 <div>
                   <Typography variant="h5" gutterBottom>
-                    Persons:
+                    Results:
                   </Typography>
                   {loading ? (
                     <Box sx={{ display: 'flex' }}>
@@ -706,7 +700,7 @@ const User = (props) => {
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => recognitionHandle()}>Recognition</Button>
+            <Button onClick={() => recognitionHandle()}>Recognize</Button>
             <Button
               onClick={() => {
                 setOpenRecFace(false);
