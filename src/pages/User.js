@@ -10,35 +10,31 @@ import { connect } from 'react-redux';
 import * as actionsType from '../reduxConfig/store/actionTypes';
 
 import FaceIcon from '@mui/icons-material/Face';
-import Fab from '@mui/material/Fab';
-import CheckIcon from '@mui/icons-material/Check';
-import SaveIcon from '@mui/icons-material/Save';
+import AddIcon from '@mui/icons-material/Add';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import CameraIcon from '@mui/icons-material/CameraAlt';
 
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import { PhotoCamera, Videocam } from '@mui/icons-material';
 import cameraFill from '@iconify/icons-eva/camera-fill';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Slide from '@mui/material/Slide';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import CloseIcon from '@mui/icons-material/Close';
-import Divider from '@mui/material/Divider';
 import Products from './Products';
-import Alert from '@mui/material/Alert';
 
 // material
 import { Icon } from '@iconify/react';
 import CircularProgress from '@mui/material/CircularProgress';
 import { green } from '@mui/material/colors';
+import { MHidden } from '../@material-extend/index';
 
 import {
   Card,
@@ -46,7 +42,6 @@ import {
   Stack,
   Avatar,
   Button,
-  Checkbox,
   TableRow,
   TableBody,
   TableCell,
@@ -63,13 +58,10 @@ import Page from '../components/Page';
 import Label from '../components/Label';
 import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
-import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dashboard/user';
+import { UserListHead, UserMoreMenu } from '../components/_dashboard/user';
 //
 import USERLIST from '../_mocks_/user';
-import * as actions from '../reduxConfig/store/index';
-import { set } from 'date-fns';
 import ApiFetching from 'src/utils/apiFetching';
-import { get } from 'lodash-es';
 import { styled } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
@@ -84,6 +76,13 @@ const TABLE_HEAD = [
 const useStyles = makeStyles({
   dialogCustomizedWidth: {
     width: '80%'
+  },
+  IconButton: {
+    backgroundColor: '#00AB55',
+    position: 'relative',
+    '&:hover': {
+      backgroundColor: '#007B55'
+    }
   }
 });
 
@@ -144,6 +143,8 @@ const RootStyle = styled('div')(({ theme }) => ({
 }));
 
 const User = (props) => {
+  const classes = useStyles();
+
   const [warning, setWarning] = useState(false);
 
   const [page, setPage] = useState(0);
@@ -163,20 +164,10 @@ const User = (props) => {
   const [openRecFace, setOpenRecFace] = useState(false);
   const [loading, setLoading] = useState(false);
   const [facesRec, setFacesRec] = useState([]);
-  const [openTraining, setOpenTraing] = useState(false);
   const [trainSuccess, setTrainSuccess] = useState(true);
   const { persons, setPersonsStore, onRegisterFace } = props;
   const [isChangeText, setIsChangeText] = useState(false);
   const [registerFaceErr, setRegisterFaceErr] = useState(false);
-
-  const buttonSx = {
-    ...(trainSuccess && {
-      bgcolor: green[500],
-      '&:hover': {
-        bgcolor: green[700]
-      }
-    })
-  };
 
   const sleep = (milliseconds) => {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -309,10 +300,6 @@ const User = (props) => {
     setPage(0);
   };
 
-  const handleFilterByName = (event) => {
-    setFilterName(event.target.value);
-  };
-
   const registerFaceHandle = (face) => {
     if (!trainSuccess) {
       setWarning(true);
@@ -322,18 +309,23 @@ const User = (props) => {
     if (currImage && currPerson) {
       let registerData = new FormData();
       registerData.append('image', currImage.currentFile);
-      registerFace(registerData, currPerson.uuid, (data) => {
-        data.personId = currPerson.uuid;
-        onRegisterFace(data);
-        setLoading(false);
-        setOpenRegisterFace(false);
-        setCurrImage(null);
-      }, () => {
-        setRegisterFaceErr(true);
-        setLoading(false);
-        // setOpenRegisterFace(false);
-        setCurrImage(null);
-      });
+      registerFace(
+        registerData,
+        currPerson.uuid,
+        (data) => {
+          data.personId = currPerson.uuid;
+          onRegisterFace(data);
+          setLoading(false);
+          setOpenRegisterFace(false);
+          setCurrImage(null);
+        },
+        () => {
+          setRegisterFaceErr(true);
+          setLoading(false);
+          // setOpenRegisterFace(false);
+          setCurrImage(null);
+        }
+      );
     } else {
       setLoading(false);
       setOpenRegisterFace(false);
@@ -385,61 +377,123 @@ const User = (props) => {
 
   return (
     <Page title="Persons | S-Faces">
-      <Container sx={{padding: '0 !important', maxWidth: "unset !important"}}>
+      <Container sx={{ padding: '20px !important', maxWidth: 'unset !important' }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
             Persons
           </Typography>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-            <Box mr={5}>
-              <Button
-                variant="contained"
-                component={RouterLink}
-                to="#"
+          <MHidden width="mdDown">
+            <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
+              <Box mr={5}>
+                <Button
+                  variant="contained"
+                  component={RouterLink}
+                  to="#"
+                  onClick={() => {
+                    setOpenCreate(true);
+                    setIsChangeText(false);
+                  }}
+                  width="smDown"
+                  startIcon={<Icon icon={plusFill} />}
+                  pt={3}
+                >
+                  New Person
+                </Button>
+              </Box>
+              <Box mr={5}>
+                <Button
+                  variant="contained"
+                  component={RouterLink}
+                  to="#"
+                  onClick={() => startReTrain()}
+                  startIcon={
+                    trainSuccess ? (
+                      <Icon icon={refreshFill} />
+                    ) : (
+                      <CircularProgress size={20} color="inherit" />
+                    )
+                  }
+                  pt={3}
+                >
+                  Re-Train
+                </Button>
+              </Box>
+              <Box>
+                <Button
+                  variant="contained"
+                  // component={RouterLink}
+                  to="#"
+                  onClick={() => {
+                    setOpenRecFace(true);
+                    setCurrImage(null);
+                    setFacesRec([]);
+                  }}
+                  startIcon={<Icon icon={cameraFill} />}
+                >
+                  Faces Recognition
+                </Button>
+              </Box>
+            </Stack>
+          </MHidden>
+          <MHidden width="mdUp">
+            <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
+              <IconButton
+                sx={{
+                  backgroundColor: 'primary.main',
+                  marginRight: '5px'
+                }}
                 onClick={() => {
                   setOpenCreate(true);
                   setIsChangeText(false);
                 }}
-                startIcon={<Icon icon={plusFill} />}
-                pt={3}
+                className={classes.IconButton}
               >
-                New Person
-              </Button>
-            </Box>
-            <Box mr={5}>
-              <Button
-                variant="contained"
-                component={RouterLink}
-                to="#"
+                <AddIcon
+                  sx={{
+                    color: '#fff'
+                  }}
+                />
+              </IconButton>
+              <IconButton
+                sx={{
+                  backgroundColor: 'primary.main',
+                  marginRight: '5px'
+                }}
                 onClick={() => startReTrain()}
-                startIcon={
-                  trainSuccess ? (
-                    <Icon icon={refreshFill} />
-                  ) : (
-                    <CircularProgress size={20} color="inherit" />
-                  )
-                }
-                pt={3}
+                className={classes.IconButton}
               >
-                Re-Train
-              </Button>
-            </Box>
-            <Box>
-              <Button
-                variant="contained"
-                // component={RouterLink}
-                to="#"
+                {trainSuccess ? (
+                  <RefreshIcon
+                    sx={{
+                      color: '#fff'
+                    }}
+                  />
+                ) : (
+                  <CircularProgress size={20} sx={{
+                    color: '#fff'
+                  }} />
+                )}
+              </IconButton>
+              <IconButton
+                sx={{
+                  backgroundColor: 'primary.main'
+                }}
                 onClick={() => {
                   setOpenRecFace(true);
                   setCurrImage(null);
                   setFacesRec([]);
                 }}
-                startIcon={<Icon icon={cameraFill} />}
+                className={classes.IconButton}
               >
-                Faces Recognition
-              </Button>
-            </Box>
-          </Stack>
+                <CameraIcon
+                  sx={{
+                    color: '#fff'
+                  }}
+                  mr
+                />
+              </IconButton>
+            </Stack>
+          </MHidden>
         </Stack>
 
         <Card>

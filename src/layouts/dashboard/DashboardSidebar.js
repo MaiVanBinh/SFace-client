@@ -12,7 +12,7 @@ import { MHidden } from '../../components/@material-extend';
 //
 import sidebarConfig from './SidebarConfig';
 import account from '../../_mocks_/account';
-
+import avatar from '../../assets/illustrations/illustration_avatar.png'
 // ----------------------------------------------------------------------
 
 const DRAWER_WIDTH = 280;
@@ -96,7 +96,7 @@ export default function DashboardSidebar({ isOpenSidebar, onCloseSidebar }) {
         >
           <Box
             component="img"
-            src="/static/illustrations/illustration_avatar.png"
+            src={avatar}
             sx={{ width: 100, position: 'absolute', top: -50 }}
           />
         </Stack>

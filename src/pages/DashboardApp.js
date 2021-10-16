@@ -38,7 +38,7 @@ export default function DashboardApp() {
 
   return (
     <Page title="Dashboard | S-Faces">
-      <Container sx={{ padding: '0 !important', maxWidth: 'unset !important' }}>
+      <Container sx={{ padding: '20px !important', maxWidth: 'unset !important' }}>
         <Box sx={{ pb: 5 }}>
           <Typography variant="h4">Hi, Welcome back</Typography>
         </Box>
