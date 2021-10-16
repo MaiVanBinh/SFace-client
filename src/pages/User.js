@@ -383,7 +383,7 @@ const User = (props) => {
             Persons
           </Typography>
           <MHidden width="mdDown">
-            <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Box mr={5}>
                 <Button
                   variant="contained"
@@ -436,7 +436,7 @@ const User = (props) => {
             </Stack>
           </MHidden>
           <MHidden width="mdUp">
-            <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
               <IconButton
                 sx={{
                   backgroundColor: 'primary.main',
@@ -469,9 +469,12 @@ const User = (props) => {
                     }}
                   />
                 ) : (
-                  <CircularProgress size={20} sx={{
-                    color: '#fff'
-                  }} />
+                  <CircularProgress
+                    size={20}
+                    sx={{
+                      color: '#fff'
+                    }}
+                  />
                 )}
               </IconButton>
               <IconButton
