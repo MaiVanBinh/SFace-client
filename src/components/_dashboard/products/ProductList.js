@@ -65,7 +65,7 @@ const ProductList = ({ personId, persons, onDeleteFace, trainSuccess, ...other }
               setFaceDel(null);
             }}
           >
-            Cancle
+            Cancel
           </Button>
         </DialogActions>
       </Dialog>
