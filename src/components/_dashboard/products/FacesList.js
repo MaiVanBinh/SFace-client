@@ -1,18 +1,16 @@
 import PropTypes from 'prop-types';
 // material
 import { Grid, Button } from '@mui/material';
-import ShopProductCard from './ProductCard';
+import FacesCard from './FacesCard';
 import { useEffect, useState } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import ApiFetching from './../../../utils/apiFetching';
+import ApiFetching from '../../../utils/apiFetching';
 import { connect } from 'react-redux';
 import * as actionsType from '../../../reduxConfig/store/actionTypes';
 
-const ProductList = ({ personId, persons, onDeleteFace, trainSuccess, ...other }) => {
+const FacesList = ({ personId, persons, onDeleteFace, trainSuccess, ...other }) => {
   const [openDelete, setOpenDelete] = useState(false);
   const [faceDel, setFaceDel] = useState(null);
   const { deleteFaceById } = ApiFetching();
@@ -37,7 +35,7 @@ const ProductList = ({ personId, persons, onDeleteFace, trainSuccess, ...other }
     <Grid container spacing={3} {...other}>
       {faces.map((face) => (
         <Grid key={face.id} item xs={12} sm={6} md={3}>
-          <ShopProductCard
+          <FacesCard
             face={face}
             trainSuccess={trainSuccess}
             deleteFace={() => {
@@ -85,4 +83,4 @@ const mapDispatchToProps = (dispatch) => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProductList);
+export default connect(mapStateToProps, mapDispatchToProps)(FacesList);

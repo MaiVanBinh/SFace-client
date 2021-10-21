@@ -7,7 +7,6 @@ import {
   AppNewUsers,
   LastestModel,
   FacesCount,
-  AppWeeklySales
 } from '../components/_dashboard/app';
 
 import ApiFetching from '../utils/apiFetching';
