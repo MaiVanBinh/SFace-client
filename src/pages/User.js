@@ -145,6 +145,7 @@ const Users = (props) => {
   const { persons, setPersonsStore, onRegisterFace } = props;
   const [isChangeText, setIsChangeText] = useState(false);
   const [registerFaceErr, setRegisterFaceErr] = useState(false);
+  const [warningText, setWarningText] = useState("");
 
   const sleep = (milliseconds) => {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -162,6 +163,7 @@ const Users = (props) => {
   const startReTrain = () => {
     if (!trainSuccess) {
       setWarning(true);
+      setWarningText("Wait for training process complete!");
       return;
     }
     setTrainSuccess(false);
@@ -174,23 +176,36 @@ const Users = (props) => {
     while (!stop) {
       await sleep(2000);
       const data = await checkStatusTrain();
-      if (data && data.status === 'complete') {
+      if ((data && data.status === 'complete') || !data.status) {
         stop = true;
         setTrainSuccess(true);
+      } 
+      if(data && data.status === 'failed') {
+        stop = true;
+        setTrainSuccess(true);
+        setWarning(true);
+        setWarningText("Train Model Failed")
       }
     }
   }, [trainSuccess]);
 
   useEffect(async () => {
     const data = await checkStatusTrain();
-    if (data && data.status !== 'complete') {
-      setTrainSuccess(false);
+    if ((data && data.status === 'complete') || !data.status) {
+      setTrainSuccess(true);
+    } 
+    
+    if(data && data.status === 'failed') {
+      setTrainSuccess(true);
+      setWarning(true);
+      setWarningText("Train Model Failed")
     }
   }, []);
 
   const deletePersonHandle = () => {
     if (!trainSuccess) {
       setWarning(true);
+      setWarningText("Wait for training process complete!");
       return;
     }
     if (currPerson) {
@@ -213,6 +228,7 @@ const Users = (props) => {
   const createPersonHandle = () => {
     if (!trainSuccess) {
       setWarning(true);
+      setWarningText("Wait for training process complete!");
       return;
     }
 
@@ -253,6 +269,7 @@ const Users = (props) => {
   const registerFaceHandle = (face) => {
     if (!trainSuccess) {
       setWarning(true);
+      setWarningText("Wait for training process complete!");
       return;
     }
     setLoading(true);
@@ -286,6 +303,7 @@ const Users = (props) => {
   const openRegisterFaceHandle = (row) => {
     if (!trainSuccess) {
       setWarning(true);
+      setWarningText("Wait for training process complete!");
       return;
     }
     setOpenRegisterFace(true);
@@ -750,7 +768,7 @@ const Users = (props) => {
 
         {/* warning */}
         <Dialog open={warning} onClose={() => setWarning(false)}>
-          <DialogTitle>Wait for training process complete!</DialogTitle>
+          <DialogTitle>{warningText}</DialogTitle>
         </Dialog>
 
         <Dialog open={registerFaceErr} onClose={() => setRegisterFaceErr(false)}>

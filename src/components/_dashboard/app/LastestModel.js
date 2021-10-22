@@ -36,7 +36,7 @@ const IconWrapperStyle = styled('div')(({ theme }) => ({
 
 const TOTAL = 234;
 
-export default function LastestModel({modelInfo}) {
+export default function LastestModel({ modelInfo }) {
   return (
     <RootStyle>
       <IconWrapperStyle>
@@ -44,7 +44,8 @@ export default function LastestModel({modelInfo}) {
       </IconWrapperStyle>
       <Typography variant="h3">Model</Typography>
       <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
-        Time: {modelInfo && modelInfo.time.split('T')[0] } / Persons: {modelInfo && modelInfo.persons }
+        Time: {modelInfo && modelInfo.time && modelInfo.time.split('T')[0]} / Persons:{' '}
+        {modelInfo && modelInfo.persons}
       </Typography>
     </RootStyle>
   );

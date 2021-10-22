@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: `http://127.0.0.1:5000/v1/`
+  baseURL: `https://vdc-dev.gemiso.com/sface/v1`
 });
 
 export default instance;
