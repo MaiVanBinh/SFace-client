@@ -125,7 +125,7 @@ const Users = (props) => {
   const [warning, setWarning] = useState(false);
 
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(15);
   const [order, setOrder] = useState('asc');
   const [selected, setSelected] = useState([]);
   const [orderBy, setOrderBy] = useState('name');
@@ -145,7 +145,7 @@ const Users = (props) => {
   const { persons, setPersonsStore, onRegisterFace } = props;
   const [isChangeText, setIsChangeText] = useState(false);
   const [registerFaceErr, setRegisterFaceErr] = useState(false);
-  const [warningText, setWarningText] = useState("");
+  const [warningText, setWarningText] = useState('');
 
   const sleep = (milliseconds) => {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -163,7 +163,7 @@ const Users = (props) => {
   const startReTrain = () => {
     if (!trainSuccess) {
       setWarning(true);
-      setWarningText("Wait for training process complete!");
+      setWarningText('Wait for training process complete!');
       return;
     }
     setTrainSuccess(false);
@@ -179,12 +179,12 @@ const Users = (props) => {
       if ((data && data.status === 'complete') || !data.status) {
         stop = true;
         setTrainSuccess(true);
-      } 
-      if(data && data.status === 'failed') {
+      }
+      if (data && data.status === 'failed') {
         stop = true;
         setTrainSuccess(true);
         setWarning(true);
-        setWarningText("Train Model Failed")
+        setWarningText('Train Model Failed');
       }
     }
   }, [trainSuccess]);
@@ -193,19 +193,19 @@ const Users = (props) => {
     const data = await checkStatusTrain();
     if ((data && data.status === 'complete') || !data.status) {
       setTrainSuccess(true);
-    } 
-    
-    if(data && data.status === 'failed') {
+    }
+
+    if (data && data.status === 'failed') {
       setTrainSuccess(true);
       setWarning(true);
-      setWarningText("Train Model Failed")
+      setWarningText('Train Model Failed');
     }
   }, []);
 
   const deletePersonHandle = () => {
     if (!trainSuccess) {
       setWarning(true);
-      setWarningText("Wait for training process complete!");
+      setWarningText('Wait for training process complete!');
       return;
     }
     if (currPerson) {
@@ -220,7 +220,6 @@ const Users = (props) => {
   };
 
   const openDeteleForm = (row) => {
-    console.log(row);
     setCurrPerson(row);
     setOpenDelete(true);
   };
@@ -228,16 +227,15 @@ const Users = (props) => {
   const createPersonHandle = () => {
     if (!trainSuccess) {
       setWarning(true);
-      setWarningText("Wait for training process complete!");
+      setWarningText('Wait for training process complete!');
       return;
     }
 
     createPersons({ name: name }, () => {
       getPersons(page, rowsPerPage, (data) => {
+        setOpenCreate(false);
         setPersonsStore(data.list);
         setCurrPerson(null);
-        setOpenCreate(false);
-        setName('');
         setTotalPersons(data.paging.total);
       });
     });
@@ -263,13 +261,20 @@ const Users = (props) => {
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
+    localStorage.setItem('rowsPerPage', parseInt(event.target.value, 10));
     setPage(0);
   };
-
+  useEffect(() => {
+    const rpp = localStorage.getItem('rowsPerPage');
+    
+    if (rpp && !isNaN(rpp) ) {
+      setRowsPerPage(rpp);
+    }
+  }, []);
   const registerFaceHandle = (face) => {
     if (!trainSuccess) {
       setWarning(true);
-      setWarningText("Wait for training process complete!");
+      setWarningText('Wait for training process complete!');
       return;
     }
     setLoading(true);
@@ -303,18 +308,23 @@ const Users = (props) => {
   const openRegisterFaceHandle = (row) => {
     if (!trainSuccess) {
       setWarning(true);
-      setWarningText("Wait for training process complete!");
+      setWarningText('Wait for training process complete!');
       return;
     }
     setOpenRegisterFace(true);
   };
   const selectFile = (event) => {
-    setCurrImage({
-      currentFile: event.target.files[0],
-      previewImage: URL.createObjectURL(event.target.files[0]),
-      progress: 0,
-      message: ''
-    });
+    setFacesRec([]);
+    try {
+      setCurrImage({
+        currentFile: event.target.files[0],
+        previewImage: URL.createObjectURL(event.target.files[0]),
+        progress: 0,
+        message: ''
+      });
+    } catch (err) {
+      setCurrImage(null);
+    }
   };
 
   const recognitionHandle = () => {
@@ -325,14 +335,15 @@ const Users = (props) => {
       recFaces(recData, (data) => {
         if (data.data.persons && data.data.persons.length > 0) {
           setFacesRec(data.data.persons);
+          setCurrImage({ ...currImage, previewImage: data.data.file });
         } else {
           setFacesRec([{ uuid: 'unknow', name: 'unknow' }]);
         }
-
         setLoading(false);
       });
     }
   };
+
   const openPersonFaces = (person) => {
     setCurrPerson(person);
     setOpenListFaces(true);
@@ -353,6 +364,7 @@ const Users = (props) => {
                   component={RouterLink}
                   to="#"
                   onClick={() => {
+                    setName('');
                     setOpenCreate(true);
                     setIsChangeText(false);
                   }}
@@ -565,7 +577,7 @@ const Users = (props) => {
           </Scrollbar>
 
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
+            rowsPerPageOptions={[15, 35, 100]}
             component="div"
             count={totalPersons}
             rowsPerPage={rowsPerPage}
@@ -619,7 +631,7 @@ const Users = (props) => {
           <DialogTitle>Delete Person: {currPerson && currPerson.name}</DialogTitle>
 
           <DialogActions>
-            <Button onClick={() => deletePersonHandle()}>Save</Button>
+            <Button onClick={() => deletePersonHandle()}>OK</Button>
             <Button
               onClick={() => {
                 setOpenDelete(false);
@@ -635,8 +647,13 @@ const Users = (props) => {
         <Dialog
           open={openRegisterFace}
           onClose={() => {
-            setOpenRegisterFace(false);
-            setCurrImage(null);
+            if (!loading) {
+              setOpenRegisterFace(false);
+              setCurrImage(null);
+            } else {
+              setWarning(true);
+              setWarningText('Wait process success!');
+            }
           }}
         >
           <DialogTitle>Register one more face to: {currPerson && currPerson.name}</DialogTitle>
@@ -654,11 +671,27 @@ const Users = (props) => {
             {currImage && <img src={currImage.previewImage} alt="" />}
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => registerFaceHandle()}>Register</Button>
+            <Button
+              onClick={
+                !loading
+                  ? () => registerFaceHandle()
+                  : () => {
+                      setWarning(true);
+                      setWarningText('Wait process success!');
+                    }
+              }
+            >
+              Register
+            </Button>
             <Button
               onClick={() => {
-                setOpenRegisterFace(false);
-                setCurrImage(null);
+                if (!loading) {
+                  setOpenRegisterFace(false);
+                  setCurrImage(null);
+                } else {
+                  setWarning(true);
+                  setWarningText('Wait process success!');
+                }
               }}
             >
               Cancel
@@ -670,8 +703,13 @@ const Users = (props) => {
         <Dialog
           open={openRecFace}
           onClose={() => {
-            setOpenRecFace(false);
-            setCurrImage(null);
+            if (!loading) {
+              setOpenRecFace(false);
+              setCurrImage(null);
+            } else {
+              setWarning(true);
+              setWarningText('Wait process success!');
+            }
           }}
           fullWidth={true}
           maxWidth={'sm'}
@@ -713,6 +751,7 @@ const Users = (props) => {
                       id="icon-button-photo"
                       type="file"
                       onChange={selectFile}
+                      disabled={loading}
                     />
                     <label htmlFor="icon-button-photo"></label>
                   </Box>
@@ -724,11 +763,27 @@ const Users = (props) => {
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => recognitionHandle()}>Recognize</Button>
+            <Button
+              onClick={
+                !loading
+                  ? () => recognitionHandle()
+                  : () => {
+                      setWarning(true);
+                      setWarningText('Wait process success!');
+                    }
+              }
+            >
+              Recognize
+            </Button>
             <Button
               onClick={() => {
-                setOpenRecFace(false);
-                setCurrImage(null);
+                if (!loading) {
+                  setOpenRecFace(false);
+                  setCurrImage(null);
+                } else {
+                  setWarning(true);
+                  setWarningText('Wait process success!');
+                }
               }}
             >
               Cancel
